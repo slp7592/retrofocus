@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'unsafe-inline'; style-src 'unsafe-inline';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src https://api.github.com https://gist.githubusercontent.com;">
     <title>Rétrospective Sprint</title>
     <style>
         * {
@@ -104,6 +104,15 @@
 
         .btn-danger:hover {
             background: #e53e3e;
+        }
+
+        .btn-info {
+            background: #4299e1;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background: #3182ce;
         }
 
         .columns {
@@ -222,6 +231,7 @@
             border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             text-align: center;
+            margin-bottom: 20px;
         }
 
         .timer-display {
@@ -236,6 +246,37 @@
             gap: 10px;
             justify-content: center;
             margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .session-section {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .session-section h3 {
+            color: #2d3748;
+            margin-bottom: 15px;
+        }
+
+        .session-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .session-id {
+            background: #edf2f7;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-weight: 700;
+            color: #667eea;
+            user-select: all;
         }
 
         .export-section {
@@ -243,8 +284,29 @@
             padding: 20px;
             border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            margin-top: 20px;
             text-align: center;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-indicator.online {
+            background: #48bb78;
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.offline {
+            background: #f56565;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
 
         @media (max-width: 768px) {
@@ -255,6 +317,15 @@
             header {
                 flex-direction: column;
                 align-items: flex-start;
+            }
+
+            .session-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .session-id {
+                word-break: break-all;
             }
         }
     </style>
@@ -268,10 +339,28 @@
                     <span>👤</span>
                     <input type="text" id="userName" placeholder="Votre nom" maxlength="30">
                 </div>
-                <button class="btn btn-secondary" onclick="refreshData()">🔄 Rafraîchir</button>
                 <button class="btn btn-danger" onclick="clearAll()">🗑️ Tout effacer</button>
             </div>
         </header>
+
+        <div class="session-section">
+            <h3>🔗 Session de collaboration</h3>
+            <div class="session-controls">
+                <input type="text" id="sessionIdInput" placeholder="Entrez un ID de session" style="flex: 1; min-width: 200px;">
+                <button class="btn btn-primary" onclick="joinSession()">Rejoindre</button>
+                <button class="btn btn-secondary" onclick="createNewSession()">Nouvelle session</button>
+            </div>
+            <div id="currentSession" style="margin-top: 15px; display: none;">
+                <p style="color: #718096; margin-bottom: 10px;">
+                    <span class="status-indicator online"></span>
+                    Session active:
+                </p>
+                <div class="session-id" id="sessionIdDisplay"></div>
+                <p style="color: #718096; font-size: 12px; margin-top: 10px;">
+                    Partagez cet ID avec votre équipe pour collaborer en temps réel
+                </p>
+            </div>
+        </div>
 
         <div class="columns">
             <div class="column positive">
@@ -315,6 +404,7 @@
             <h3>⏱️ Minuteur de rétrospective</h3>
             <div class="timer-display" id="timerDisplay">15:00</div>
             <div class="timer-controls">
+                <button class="btn btn-primary" onclick="startTimer(5)">5 min</button>
                 <button class="btn btn-primary" onclick="startTimer(15)">15 min</button>
                 <button class="btn btn-primary" onclick="startTimer(30)">30 min</button>
                 <button class="btn btn-secondary" onclick="pauseTimer()">⏸️ Pause</button>
@@ -331,21 +421,66 @@
     <script>
         let timerInterval = null;
         let timeRemaining = 0;
+        let currentSessionId = null;
+        let sessionData = { positive: [], negative: [], action: [] };
 
-        async function loadData() {
-            try {
-                const result = await window.storage.get('retro-data', true);
-                return result ? JSON.parse(result.value) : { positive: [], negative: [], action: [] };
-            } catch {
-                return { positive: [], negative: [], action: [] };
+        // Génération d'un ID de session unique
+        function generateSessionId() {
+            return 'retro-' + Math.random().toString(36).substring(2, 9);
+        }
+
+        // Sauvegarde des données dans localStorage
+        function saveToLocalStorage() {
+            if (currentSessionId) {
+                localStorage.setItem(currentSessionId, JSON.stringify(sessionData));
             }
         }
 
-        async function saveData(data) {
-            try {
-                await window.storage.set('retro-data', JSON.stringify(data), true);
-            } catch (e) {
-                alert('Erreur lors de la sauvegarde: ' + e.message);
+        // Chargement des données depuis localStorage
+        function loadFromLocalStorage() {
+            if (currentSessionId) {
+                const data = localStorage.getItem(currentSessionId);
+                if (data) {
+                    sessionData = JSON.parse(data);
+                } else {
+                    sessionData = { positive: [], negative: [], action: [] };
+                }
+            }
+        }
+
+        // Créer une nouvelle session
+        function createNewSession() {
+            currentSessionId = generateSessionId();
+            sessionData = { positive: [], negative: [], action: [] };
+            saveToLocalStorage();
+            updateSessionDisplay();
+            renderCards();
+        }
+
+        // Rejoindre une session existante
+        function joinSession() {
+            const input = document.getElementById('sessionIdInput').value.trim();
+            if (!input) {
+                alert('Veuillez entrer un ID de session');
+                return;
+            }
+            
+            currentSessionId = input;
+            loadFromLocalStorage();
+            updateSessionDisplay();
+            renderCards();
+        }
+
+        // Mise à jour de l'affichage de la session
+        function updateSessionDisplay() {
+            const display = document.getElementById('currentSession');
+            const idDisplay = document.getElementById('sessionIdDisplay');
+            
+            if (currentSessionId) {
+                display.style.display = 'block';
+                idDisplay.textContent = currentSessionId;
+            } else {
+                display.style.display = 'none';
             }
         }
 
@@ -357,13 +492,17 @@
             return name.substring(0, 30);
         }
 
-        async function addCard(type) {
+        function addCard(type) {
+            if (!currentSessionId) {
+                alert('Veuillez d\'abord créer ou rejoindre une session');
+                return;
+            }
+
             const input = document.getElementById(`input${type.charAt(0).toUpperCase() + type.slice(1)}`);
             const content = input.value.trim();
             
             if (!content) return;
 
-            const data = await loadData();
             const card = {
                 id: Date.now() + Math.random(),
                 content: content.substring(0, 200),
@@ -372,37 +511,33 @@
                 timestamp: Date.now()
             };
 
-            data[type].push(card);
-            await saveData(data);
+            sessionData[type].push(card);
+            saveToLocalStorage();
             input.value = '';
-            await renderCards();
+            renderCards();
         }
 
-        async function deleteCard(type, id) {
+        function deleteCard(type, id) {
             if (!confirm('Supprimer cette carte ?')) return;
             
-            const data = await loadData();
-            data[type] = data[type].filter(c => c.id !== id);
-            await saveData(data);
-            await renderCards();
+            sessionData[type] = sessionData[type].filter(c => c.id !== id);
+            saveToLocalStorage();
+            renderCards();
         }
 
-        async function voteCard(type, id) {
-            const data = await loadData();
-            const card = data[type].find(c => c.id === id);
+        function voteCard(type, id) {
+            const card = sessionData[type].find(c => c.id === id);
             if (card) {
                 card.votes = (card.votes || 0) + 1;
-                await saveData(data);
-                await renderCards();
+                saveToLocalStorage();
+                renderCards();
             }
         }
 
-        async function renderCards() {
-            const data = await loadData();
-            
+        function renderCards() {
             ['positive', 'negative', 'action'].forEach(type => {
                 const container = document.getElementById(`cards${type.charAt(0).toUpperCase() + type.slice(1)}`);
-                const cards = data[type].sort((a, b) => (b.votes || 0) - (a.votes || 0));
+                const cards = sessionData[type].sort((a, b) => (b.votes || 0) - (a.votes || 0));
                 
                 container.innerHTML = cards.map(card => `
                     <div class="card">
@@ -432,15 +567,17 @@
             return div.innerHTML;
         }
 
-        async function refreshData() {
-            await renderCards();
-        }
-
-        async function clearAll() {
-            if (!confirm('⚠️ Supprimer toutes les données de la rétrospective ? Cette action est irréversible.')) return;
+        function clearAll() {
+            if (!currentSessionId) {
+                alert('Aucune session active');
+                return;
+            }
             
-            await saveData({ positive: [], negative: [], action: [] });
-            await renderCards();
+            if (!confirm('⚠️ Supprimer toutes les données de cette session ? Cette action est irréversible.')) return;
+            
+            sessionData = { positive: [], negative: [], action: [] };
+            saveToLocalStorage();
+            renderCards();
         }
 
         function startTimer(minutes) {
@@ -470,7 +607,7 @@
                 timerInterval = null;
             }
             timeRemaining = 0;
-            updateTimerDisplay();
+            document.getElementById('timerDisplay').textContent = '15:00';
         }
 
         function updateTimerDisplay() {
@@ -480,18 +617,23 @@
                 `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
         }
 
-        async function exportData() {
-            const data = await loadData();
+        function exportData() {
+            if (!currentSessionId) {
+                alert('Aucune session active à exporter');
+                return;
+            }
+
             const exportObj = {
+                sessionId: currentSessionId,
                 date: new Date().toISOString(),
-                retrospective: data
+                retrospective: sessionData
             };
             
             const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `retrospective-${new Date().toISOString().split('T')[0]}.json`;
+            a.download = `retrospective-${currentSessionId}-${new Date().toISOString().split('T')[0]}.json`;
             a.click();
             URL.revokeObjectURL(url);
         }
@@ -505,11 +647,15 @@
             });
         });
 
-        // Charger les données au démarrage
-        renderCards();
+        // Gestion de la session ID input
+        document.getElementById('sessionIdInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                joinSession();
+            }
+        });
 
-        // Rafraîchissement automatique toutes les 5 secondes
-        setInterval(refreshData, 5000);
+        // Initialisation
+        updateSessionDisplay();
     </script>
 </body>
 </html>
