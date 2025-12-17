@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'unsafe-inline'; style-src 'unsafe-inline';">
+    <title>Rétrospective Sprint</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        h1 {
+            color: #667eea;
+            font-size: 28px;
+        }
+
+        .session-info {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .user-name {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        input[type="text"] {
+            padding: 10px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #38a169;
+        }
+
+        .btn-danger {
+            background: #f56565;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #e53e3e;
+        }
+
+        .columns {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .column {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .column-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid;
+        }
+
+        .column.positive .column-header { border-color: #48bb78; }
+        .column.negative .column-header { border-color: #f56565; }
+        .column.action .column-header { border-color: #4299e1; }
+
+        .column-icon {
+            font-size: 24px;
+        }
+
+        .column-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .add-card {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .add-card input {
+            flex: 1;
+        }
+
+        .card {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid;
+            position: relative;
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateX(5px);
+        }
+
+        .column.positive .card { border-color: #48bb78; }
+        .column.negative .card { border-color: #f56565; }
+        .column.action .card { border-color: #4299e1; }
+
+        .card-content {
+            margin-bottom: 10px;
+            color: #2d3748;
+            word-wrap: break-word;
+        }
+
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #718096;
+        }
+
+        .card-author {
+            font-weight: 600;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .card-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+            transition: transform 0.2s;
+        }
+
+        .card-btn:hover {
+            transform: scale(1.2);
+        }
+
+        .votes {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-weight: 700;
+        }
+
+        .timer {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .timer-display {
+            font-size: 48px;
+            font-weight: 700;
+            color: #667eea;
+            margin: 15px 0;
+        }
+
+        .timer-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+
+        .export-section {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .columns {
+                grid-template-columns: 1fr;
+            }
+            
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔄 Rétrospective Sprint</h1>
+            <div class="session-info">
+                <div class="user-name">
+                    <span>👤</span>
+                    <input type="text" id="userName" placeholder="Votre nom" maxlength="30">
+                </div>
+                <button class="btn btn-secondary" onclick="refreshData()">🔄 Rafraîchir</button>
+                <button class="btn btn-danger" onclick="clearAll()">🗑️ Tout effacer</button>
+            </div>
+        </header>
+
+        <div class="columns">
+            <div class="column positive">
+                <div class="column-header">
+                    <span class="column-icon">😊</span>
+                    <h2 class="column-title">Points positifs</h2>
+                </div>
+                <div class="add-card">
+                    <input type="text" id="inputPositive" placeholder="Qu'est-ce qui a bien fonctionné ?" maxlength="200">
+                    <button class="btn btn-primary" onclick="addCard('positive')">+</button>
+                </div>
+                <div id="cardsPositive"></div>
+            </div>
+
+            <div class="column negative">
+                <div class="column-header">
+                    <span class="column-icon">😟</span>
+                    <h2 class="column-title">Points à améliorer</h2>
+                </div>
+                <div class="add-card">
+                    <input type="text" id="inputNegative" placeholder="Qu'est-ce qui pourrait être amélioré ?" maxlength="200">
+                    <button class="btn btn-primary" onclick="addCard('negative')">+</button>
+                </div>
+                <div id="cardsNegative"></div>
+            </div>
+
+            <div class="column action">
+                <div class="column-header">
+                    <span class="column-icon">🎯</span>
+                    <h2 class="column-title">Actions</h2>
+                </div>
+                <div class="add-card">
+                    <input type="text" id="inputAction" placeholder="Quelle action mettre en place ?" maxlength="200">
+                    <button class="btn btn-primary" onclick="addCard('action')">+</button>
+                </div>
+                <div id="cardsAction"></div>
+            </div>
+        </div>
+
+        <div class="timer">
+            <h3>⏱️ Minuteur de rétrospective</h3>
+            <div class="timer-display" id="timerDisplay">15:00</div>
+            <div class="timer-controls">
+                <button class="btn btn-primary" onclick="startTimer(15)">15 min</button>
+                <button class="btn btn-primary" onclick="startTimer(30)">30 min</button>
+                <button class="btn btn-secondary" onclick="pauseTimer()">⏸️ Pause</button>
+                <button class="btn btn-danger" onclick="resetTimer()">⏹️ Stop</button>
+            </div>
+        </div>
+
+        <div class="export-section">
+            <h3>📊 Exporter la rétrospective</h3>
+            <button class="btn btn-primary" onclick="exportData()">📥 Télécharger (JSON)</button>
+        </div>
+    </div>
+
+    <script>
+        let timerInterval = null;
+        let timeRemaining = 0;
+
+        async function loadData() {
+            try {
+                const result = await window.storage.get('retro-data', true);
+                return result ? JSON.parse(result.value) : { positive: [], negative: [], action: [] };
+            } catch {
+                return { positive: [], negative: [], action: [] };
+            }
+        }
+
+        async function saveData(data) {
+            try {
+                await window.storage.set('retro-data', JSON.stringify(data), true);
+            } catch (e) {
+                alert('Erreur lors de la sauvegarde: ' + e.message);
+            }
+        }
+
+        function getUserName() {
+            let name = document.getElementById('userName').value.trim();
+            if (!name) {
+                name = 'Anonyme';
+            }
+            return name.substring(0, 30);
+        }
+
+        async function addCard(type) {
+            const input = document.getElementById(`input${type.charAt(0).toUpperCase() + type.slice(1)}`);
+            const content = input.value.trim();
+            
+            if (!content) return;
+
+            const data = await loadData();
+            const card = {
+                id: Date.now() + Math.random(),
+                content: content.substring(0, 200),
+                author: getUserName(),
+                votes: 0,
+                timestamp: Date.now()
+            };
+
+            data[type].push(card);
+            await saveData(data);
+            input.value = '';
+            await renderCards();
+        }
+
+        async function deleteCard(type, id) {
+            if (!confirm('Supprimer cette carte ?')) return;
+            
+            const data = await loadData();
+            data[type] = data[type].filter(c => c.id !== id);
+            await saveData(data);
+            await renderCards();
+        }
+
+        async function voteCard(type, id) {
+            const data = await loadData();
+            const card = data[type].find(c => c.id === id);
+            if (card) {
+                card.votes = (card.votes || 0) + 1;
+                await saveData(data);
+                await renderCards();
+            }
+        }
+
+        async function renderCards() {
+            const data = await loadData();
+            
+            ['positive', 'negative', 'action'].forEach(type => {
+                const container = document.getElementById(`cards${type.charAt(0).toUpperCase() + type.slice(1)}`);
+                const cards = data[type].sort((a, b) => (b.votes || 0) - (a.votes || 0));
+                
+                container.innerHTML = cards.map(card => `
+                    <div class="card">
+                        <div class="card-content">${escapeHtml(card.content)}</div>
+                        <div class="card-footer">
+                            <span class="card-author">${escapeHtml(card.author)}</span>
+                            <div class="card-actions">
+                                <div class="votes">
+                                    👍 ${card.votes || 0}
+                                </div>
+                                <button class="card-btn" onclick="voteCard('${type}', ${card.id})" title="Voter">
+                                    ⬆️
+                                </button>
+                                <button class="card-btn" onclick="deleteCard('${type}', ${card.id})" title="Supprimer">
+                                    🗑️
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        async function refreshData() {
+            await renderCards();
+        }
+
+        async function clearAll() {
+            if (!confirm('⚠️ Supprimer toutes les données de la rétrospective ? Cette action est irréversible.')) return;
+            
+            await saveData({ positive: [], negative: [], action: [] });
+            await renderCards();
+        }
+
+        function startTimer(minutes) {
+            resetTimer();
+            timeRemaining = minutes * 60;
+            updateTimerDisplay();
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                updateTimerDisplay();
+                if (timeRemaining <= 0) {
+                    resetTimer();
+                    alert('⏰ Temps écoulé !');
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        function resetTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            timeRemaining = 0;
+            updateTimerDisplay();
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeRemaining / 60);
+            const seconds = timeRemaining % 60;
+            document.getElementById('timerDisplay').textContent = 
+                `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        async function exportData() {
+            const data = await loadData();
+            const exportObj = {
+                date: new Date().toISOString(),
+                retrospective: data
+            };
+            
+            const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `retrospective-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Gestion des événements clavier
+        ['Positive', 'Negative', 'Action'].forEach(type => {
+            document.getElementById(`input${type}`).addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    addCard(type.toLowerCase());
+                }
+            });
+        });
+
+        // Charger les données au démarrage
+        renderCards();
+
+        // Rafraîchissement automatique toutes les 5 secondes
+        setInterval(refreshData, 5000);
+    </script>
+</body>
+</html>
