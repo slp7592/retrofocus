@@ -559,7 +559,7 @@
             try {
                 let configText = document.getElementById('firebaseConfig').value.trim();
                 
-                // Nettoyer le texte pour supprimer les commentaires et caractères invisibles
+                // Nettoyer le texte
                 configText = configText
                     .replace(/\/\/.*/g, '')  // Supprimer les commentaires //
                     .replace(/\/\*[\s\S]*?\*\//g, '')  // Supprimer les commentaires /* */
@@ -569,8 +569,12 @@
                 
                 // Vérifier que ça commence bien par {
                 if (!configText.startsWith('{')) {
-                    throw new Error('La configuration doit être un objet JSON valide commençant par {');
+                    throw new Error('La configuration doit commencer par {');
                 }
+                
+                // Convertir le JavaScript object en JSON valide
+                // Ajouter des guillemets autour des clés qui n'en ont pas
+                configText = configText.replace(/(\w+):/g, '"$1":');
                 
                 const config = JSON.parse(configText);
                 
@@ -592,7 +596,8 @@
                 
                 alert('✅ Firebase initialisé avec succès!');
             } catch (error) {
-                alert('❌ Erreur de configuration: ' + error.message + '\n\nAssurez-vous de copier uniquement l\'objet JSON (de { à }) sans le code JavaScript autour.');
+                alert('❌ Erreur de configuration: ' + error.message + '\n\nVérifiez que vous avez copié la configuration complète de Firebase.');
+                console.error('Configuration reçue:', document.getElementById('firebaseConfig').value);
             }
         };
 
