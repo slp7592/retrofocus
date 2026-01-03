@@ -572,11 +572,21 @@
                     throw new Error('La configuration doit commencer par {');
                 }
                 
-                // Convertir le JavaScript object en JSON valide
-                // Ajouter des guillemets autour des clés qui n'en ont pas
-                configText = configText.replace(/(\w+):/g, '"$1":');
-                
-                const config = JSON.parse(configText);
+                // Méthode alternative : utiliser eval dans un contexte sécurisé
+                // pour parser le JavaScript object literal
+                let config;
+                try {
+                    // Essayer d'abord le parsing JSON standard
+                    config = JSON.parse(configText);
+                } catch (e) {
+                    // Si ça échoue, essayer de parser le JavaScript object
+                    // en le convertissant en JSON valide
+                    const jsObject = configText
+                        // Remplacer les clés sans guillemets par des clés avec guillemets
+                        .replace(/(\s*?{\s*?|\s*?,\s*?)(['"])?([a-zA-Z0-9_]+)(['"])?:/g, '$1"$3":');
+                    
+                    config = JSON.parse(jsObject);
+                }
                 
                 // Vérifier les champs obligatoires
                 const requiredFields = ['apiKey', 'authDomain', 'databaseURL', 'projectId'];
@@ -589,7 +599,7 @@
                 const app = initializeApp(config);
                 db = getDatabase(app);
                 
-                localStorage.setItem('firebaseConfig', configText);
+                localStorage.setItem('firebaseConfig', JSON.stringify(config));
                 
                 document.getElementById('setupModal').style.display = 'none';
                 document.getElementById('mainApp').style.display = 'block';
@@ -597,6 +607,7 @@
                 alert('✅ Firebase initialisé avec succès!');
             } catch (error) {
                 alert('❌ Erreur de configuration: ' + error.message + '\n\nVérifiez que vous avez copié la configuration complète de Firebase.');
+                console.error('Erreur détaillée:', error);
                 console.error('Configuration reçue:', document.getElementById('firebaseConfig').value);
             }
         };
