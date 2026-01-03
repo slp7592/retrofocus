@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src https://api.github.com https://gist.githubusercontent.com;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'unsafe-inline' https://www.gstatic.com https://firebasestorage.googleapis.com; style-src 'unsafe-inline'; connect-src https://*.firebaseio.com https://*.googleapis.com wss://*.firebaseio.com;">
     <title>Rétrospective Sprint</title>
     <style>
         * {
@@ -22,6 +22,66 @@
         .container {
             max-width: 1400px;
             margin: 0 auto;
+        }
+
+        .setup-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .setup-content {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .setup-content h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+
+        .setup-content p {
+            color: #718096;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .setup-content code {
+            background: #f7fafc;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            color: #e53e3e;
+        }
+
+        .config-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            margin-bottom: 15px;
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .config-input:focus {
+            outline: none;
+            border-color: #667eea;
         }
 
         header {
@@ -104,15 +164,6 @@
 
         .btn-danger:hover {
             background: #e53e3e;
-        }
-
-        .btn-info {
-            background: #4299e1;
-            color: white;
-        }
-
-        .btn-info:hover {
-            background: #3182ce;
         }
 
         .columns {
@@ -277,6 +328,11 @@
             font-weight: 700;
             color: #667eea;
             user-select: all;
+            cursor: pointer;
+        }
+
+        .session-id:hover {
+            background: #e2e8f0;
         }
 
         .export-section {
@@ -309,6 +365,25 @@
             50% { opacity: 0.5; }
         }
 
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .alert-info {
+            background: #bee3f8;
+            color: #2c5282;
+            border-left: 4px solid #4299e1;
+        }
+
+        .alert-warning {
+            background: #feebc8;
+            color: #7c2d12;
+            border-left: 4px solid #ed8936;
+        }
+
         @media (max-width: 768px) {
             .columns {
                 grid-template-columns: 1fr;
@@ -323,15 +398,63 @@
                 flex-direction: column;
                 align-items: stretch;
             }
-
-            .session-id {
-                word-break: break-all;
-            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div id="setupModal" class="setup-modal">
+        <div class="setup-content">
+            <h2>🔧 Configuration Firebase</h2>
+            <p>Pour utiliser cet outil en collaboration temps réel, vous devez configurer Firebase (gratuit):</p>
+            
+            <ol style="color: #4a5568; margin: 20px 0; line-height: 1.8;">
+                <li>Créez un projet sur <a href="https://console.firebase.google.com" target="_blank" style="color: #667eea;">Firebase Console</a></li>
+                <li>Activez <strong>Realtime Database</strong></li>
+                <li>Dans les paramètres du projet, copiez votre configuration</li>
+                <li>Collez-la ci-dessous:</li>
+            </ol>
+
+            <textarea id="firebaseConfig" class="config-input" placeholder='{
+  "apiKey": "votre-api-key",
+  "authDomain": "votre-projet.firebaseapp.com",
+  "databaseURL": "https://votre-projet.firebaseio.com",
+  "projectId": "votre-projet",
+  "storageBucket": "votre-projet.appspot.com",
+  "messagingSenderId": "123456789",
+  "appId": "votre-app-id"
+}'></textarea>
+
+            <div class="alert alert-warning">
+                ⚠️ Après configuration, ajoutez ces règles de sécurité dans Firebase:
+            </div>
+
+            <textarea class="config-input" readonly style="min-height: 200px;">{
+  "rules": {
+    "sessions": {
+      "$sessionId": {
+        ".read": true,
+        ".write": true,
+        "positive": {
+          ".validate": "newData.hasChildren(['id', 'content', 'author', 'votes', 'timestamp'])"
+        },
+        "negative": {
+          ".validate": "newData.hasChildren(['id', 'content', 'author', 'votes', 'timestamp'])"
+        },
+        "action": {
+          ".validate": "newData.hasChildren(['id', 'content', 'author', 'votes', 'timestamp'])"
+        }
+      }
+    }
+  }
+}</textarea>
+
+            <button class="btn btn-primary" onclick="initializeFirebase()" style="width: 100%; margin-top: 10px;">
+                🚀 Initialiser
+            </button>
+        </div>
+    </div>
+
+    <div class="container" id="mainApp" style="display: none;">
         <header>
             <h1>🔄 Rétrospective Sprint</h1>
             <div class="session-info">
@@ -353,11 +476,11 @@
             <div id="currentSession" style="margin-top: 15px; display: none;">
                 <p style="color: #718096; margin-bottom: 10px;">
                     <span class="status-indicator online"></span>
-                    Session active:
+                    Session active - Temps réel activé
                 </p>
-                <div class="session-id" id="sessionIdDisplay"></div>
+                <div class="session-id" id="sessionIdDisplay" onclick="copySessionId()" title="Cliquer pour copier"></div>
                 <p style="color: #718096; font-size: 12px; margin-top: 10px;">
-                    Partagez cet ID avec votre équipe pour collaborer en temps réel
+                    📋 Cliquez sur l'ID pour copier et partager avec votre équipe
                 </p>
             </div>
         </div>
@@ -418,47 +541,72 @@
         </div>
     </div>
 
-    <script>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getDatabase, ref, set, push, onValue, remove, update } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+        let db = null;
+        let currentSessionRef = null;
+        let currentSessionId = null;
         let timerInterval = null;
         let timeRemaining = 0;
-        let currentSessionId = null;
-        let sessionData = { positive: [], negative: [], action: [] };
 
-        // Génération d'un ID de session unique
+        window.initializeFirebase = function() {
+            try {
+                const configText = document.getElementById('firebaseConfig').value.trim();
+                const config = JSON.parse(configText);
+                
+                const app = initializeApp(config);
+                db = getDatabase(app);
+                
+                localStorage.setItem('firebaseConfig', configText);
+                
+                document.getElementById('setupModal').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'block';
+                
+                alert('✅ Firebase initialisé avec succès!');
+            } catch (error) {
+                alert('❌ Erreur de configuration: ' + error.message);
+            }
+        };
+
+        // Vérifier si une config existe déjà
+        window.addEventListener('load', () => {
+            const savedConfig = localStorage.getItem('firebaseConfig');
+            if (savedConfig) {
+                document.getElementById('firebaseConfig').value = savedConfig;
+                initializeFirebase();
+            }
+        });
+
         function generateSessionId() {
             return 'retro-' + Math.random().toString(36).substring(2, 9);
         }
 
-        // Sauvegarde des données dans localStorage
-        function saveToLocalStorage() {
-            if (currentSessionId) {
-                localStorage.setItem(currentSessionId, JSON.stringify(sessionData));
+        window.createNewSession = function() {
+            if (!db) {
+                alert('Firebase non initialisé');
+                return;
             }
-        }
 
-        // Chargement des données depuis localStorage
-        function loadFromLocalStorage() {
-            if (currentSessionId) {
-                const data = localStorage.getItem(currentSessionId);
-                if (data) {
-                    sessionData = JSON.parse(data);
-                } else {
-                    sessionData = { positive: [], negative: [], action: [] };
-                }
-            }
-        }
-
-        // Créer une nouvelle session
-        function createNewSession() {
             currentSessionId = generateSessionId();
-            sessionData = { positive: [], negative: [], action: [] };
-            saveToLocalStorage();
-            updateSessionDisplay();
-            renderCards();
-        }
+            currentSessionRef = ref(db, `sessions/${currentSessionId}`);
+            
+            const initialData = { positive: {}, negative: {}, action: {} };
+            set(currentSessionRef, initialData).then(() => {
+                setupRealtimeListener();
+                updateSessionDisplay();
+            }).catch(error => {
+                alert('Erreur lors de la création: ' + error.message);
+            });
+        };
 
-        // Rejoindre une session existante
-        function joinSession() {
+        window.joinSession = function() {
+            if (!db) {
+                alert('Firebase non initialisé');
+                return;
+            }
+
             const input = document.getElementById('sessionIdInput').value.trim();
             if (!input) {
                 alert('Veuillez entrer un ID de session');
@@ -466,12 +614,22 @@
             }
             
             currentSessionId = input;
-            loadFromLocalStorage();
+            currentSessionRef = ref(db, `sessions/${currentSessionId}`);
+            setupRealtimeListener();
             updateSessionDisplay();
-            renderCards();
+        };
+
+        function setupRealtimeListener() {
+            if (!currentSessionRef) return;
+
+            ['positive', 'negative', 'action'].forEach(type => {
+                const typeRef = ref(db, `sessions/${currentSessionId}/${type}`);
+                onValue(typeRef, (snapshot) => {
+                    renderCards();
+                });
+            });
         }
 
-        // Mise à jour de l'affichage de la session
         function updateSessionDisplay() {
             const display = document.getElementById('currentSession');
             const idDisplay = document.getElementById('sessionIdDisplay');
@@ -479,21 +637,23 @@
             if (currentSessionId) {
                 display.style.display = 'block';
                 idDisplay.textContent = currentSessionId;
-            } else {
-                display.style.display = 'none';
             }
         }
+
+        window.copySessionId = function() {
+            navigator.clipboard.writeText(currentSessionId).then(() => {
+                alert('✅ ID copié dans le presse-papier!');
+            });
+        };
 
         function getUserName() {
             let name = document.getElementById('userName').value.trim();
-            if (!name) {
-                name = 'Anonyme';
-            }
+            if (!name) name = 'Anonyme';
             return name.substring(0, 30);
         }
 
-        function addCard(type) {
-            if (!currentSessionId) {
+        window.addCard = async function(type) {
+            if (!currentSessionRef) {
                 alert('Veuillez d\'abord créer ou rejoindre une session');
                 return;
             }
@@ -501,7 +661,7 @@
             const input = document.getElementById(`input${type.charAt(0).toUpperCase() + type.slice(1)}`);
             const content = input.value.trim();
             
-            if (!content) return;
+            if (!content || content.length > 200) return;
 
             const card = {
                 id: Date.now() + Math.random(),
@@ -511,54 +671,65 @@
                 timestamp: Date.now()
             };
 
-            sessionData[type].push(card);
-            saveToLocalStorage();
-            input.value = '';
-            renderCards();
-        }
+            const typeRef = ref(db, `sessions/${currentSessionId}/${type}`);
+            const newCardRef = push(typeRef);
+            
+            try {
+                await set(newCardRef, card);
+                input.value = '';
+            } catch (error) {
+                alert('Erreur lors de l\'ajout: ' + error.message);
+            }
+        };
 
-        function deleteCard(type, id) {
+        window.deleteCard = async function(type, key) {
             if (!confirm('Supprimer cette carte ?')) return;
             
-            sessionData[type] = sessionData[type].filter(c => c.id !== id);
-            saveToLocalStorage();
-            renderCards();
-        }
-
-        function voteCard(type, id) {
-            const card = sessionData[type].find(c => c.id === id);
-            if (card) {
-                card.votes = (card.votes || 0) + 1;
-                saveToLocalStorage();
-                renderCards();
+            const cardRef = ref(db, `sessions/${currentSessionId}/${type}/${key}`);
+            try {
+                await remove(cardRef);
+            } catch (error) {
+                alert('Erreur lors de la suppression: ' + error.message);
             }
-        }
+        };
 
-        function renderCards() {
-            ['positive', 'negative', 'action'].forEach(type => {
-                const container = document.getElementById(`cards${type.charAt(0).toUpperCase() + type.slice(1)}`);
-                const cards = sessionData[type].sort((a, b) => (b.votes || 0) - (a.votes || 0));
+        window.voteCard = async function(type, key, currentVotes) {
+            const cardRef = ref(db, `sessions/${currentSessionId}/${type}/${key}`);
+            try {
+                await update(cardRef, { votes: (currentVotes || 0) + 1 });
+            } catch (error) {
+                alert('Erreur lors du vote: ' + error.message);
+            }
+        };
+
+        async function renderCards() {
+            if (!currentSessionRef) return;
+
+            for (const type of ['positive', 'negative', 'action']) {
+                const typeRef = ref(db, `sessions/${currentSessionId}/${type}`);
                 
-                container.innerHTML = cards.map(card => `
-                    <div class="card">
-                        <div class="card-content">${escapeHtml(card.content)}</div>
-                        <div class="card-footer">
-                            <span class="card-author">${escapeHtml(card.author)}</span>
-                            <div class="card-actions">
-                                <div class="votes">
-                                    👍 ${card.votes || 0}
+                onValue(typeRef, (snapshot) => {
+                    const data = snapshot.val() || {};
+                    const cards = Object.entries(data)
+                        .map(([key, card]) => ({ ...card, key }))
+                        .sort((a, b) => (b.votes || 0) - (a.votes || 0));
+                    
+                    const container = document.getElementById(`cards${type.charAt(0).toUpperCase() + type.slice(1)}`);
+                    container.innerHTML = cards.map(card => `
+                        <div class="card">
+                            <div class="card-content">${escapeHtml(card.content)}</div>
+                            <div class="card-footer">
+                                <span class="card-author">${escapeHtml(card.author)}</span>
+                                <div class="card-actions">
+                                    <div class="votes">👍 ${card.votes || 0}</div>
+                                    <button class="card-btn" onclick="voteCard('${type}', '${card.key}', ${card.votes || 0})" title="Voter">⬆️</button>
+                                    <button class="card-btn" onclick="deleteCard('${type}', '${card.key}')" title="Supprimer">🗑️</button>
                                 </div>
-                                <button class="card-btn" onclick="voteCard('${type}', ${card.id})" title="Voter">
-                                    ⬆️
-                                </button>
-                                <button class="card-btn" onclick="deleteCard('${type}', ${card.id})" title="Supprimer">
-                                    🗑️
-                                </button>
                             </div>
                         </div>
-                    </div>
-                `).join('');
-            });
+                    `).join('');
+                }, { onlyOnce: false });
+            }
         }
 
         function escapeHtml(text) {
@@ -567,20 +738,18 @@
             return div.innerHTML;
         }
 
-        function clearAll() {
-            if (!currentSessionId) {
-                alert('Aucune session active');
-                return;
+        window.clearAll = async function() {
+            if (!currentSessionRef) return;
+            if (!confirm('⚠️ Supprimer toutes les données ?')) return;
+            
+            try {
+                await set(currentSessionRef, { positive: {}, negative: {}, action: {} });
+            } catch (error) {
+                alert('Erreur: ' + error.message);
             }
-            
-            if (!confirm('⚠️ Supprimer toutes les données de cette session ? Cette action est irréversible.')) return;
-            
-            sessionData = { positive: [], negative: [], action: [] };
-            saveToLocalStorage();
-            renderCards();
-        }
+        };
 
-        function startTimer(minutes) {
+        window.startTimer = function(minutes) {
             resetTimer();
             timeRemaining = minutes * 60;
             updateTimerDisplay();
@@ -592,23 +761,23 @@
                     alert('⏰ Temps écoulé !');
                 }
             }, 1000);
-        }
+        };
 
-        function pauseTimer() {
+        window.pauseTimer = function() {
             if (timerInterval) {
                 clearInterval(timerInterval);
                 timerInterval = null;
             }
-        }
+        };
 
-        function resetTimer() {
+        window.resetTimer = function() {
             if (timerInterval) {
                 clearInterval(timerInterval);
                 timerInterval = null;
             }
             timeRemaining = 0;
             document.getElementById('timerDisplay').textContent = '15:00';
-        }
+        };
 
         function updateTimerDisplay() {
             const minutes = Math.floor(timeRemaining / 60);
@@ -617,45 +786,43 @@
                 `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
         }
 
-        function exportData() {
-            if (!currentSessionId) {
-                alert('Aucune session active à exporter');
-                return;
-            }
+        window.exportData = async function() {
+            if (!currentSessionRef) return;
 
-            const exportObj = {
-                sessionId: currentSessionId,
-                date: new Date().toISOString(),
-                retrospective: sessionData
-            };
-            
-            const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `retrospective-${currentSessionId}-${new Date().toISOString().split('T')[0]}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-        }
+            const snapshot = await onValue(currentSessionRef, (snap) => {
+                const data = snap.val();
+                const exportObj = {
+                    sessionId: currentSessionId,
+                    date: new Date().toISOString(),
+                    retrospective: data
+                };
+                
+                const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `retrospective-${currentSessionId}-${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+            }, { onlyOnce: true });
+        };
 
         // Gestion des événements clavier
         ['Positive', 'Negative', 'Action'].forEach(type => {
-            document.getElementById(`input${type}`).addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    addCard(type.toLowerCase());
-                }
-            });
-        });
-
-        // Gestion de la session ID input
-        document.getElementById('sessionIdInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                joinSession();
+            const input = document.getElementById(`input${type}`);
+            if (input) {
+                input.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') addCard(type.toLowerCase());
+                });
             }
         });
 
-        // Initialisation
-        updateSessionDisplay();
+        const sessionInput = document.getElementById('sessionIdInput');
+        if (sessionInput) {
+            sessionInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') joinSession();
+            });
+        }
     </script>
 </body>
 </html>
