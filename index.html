@@ -410,18 +410,22 @@
             <ol style="color: #4a5568; margin: 20px 0; line-height: 1.8;">
                 <li>Créez un projet sur <a href="https://console.firebase.google.com" target="_blank" style="color: #667eea;">Firebase Console</a></li>
                 <li>Activez <strong>Realtime Database</strong></li>
-                <li>Dans les paramètres du projet, copiez votre configuration</li>
-                <li>Collez-la ci-dessous:</li>
+                <li>Dans les paramètres du projet, copiez <strong>uniquement l'objet JSON</strong> (de <code>{</code> à <code>}</code>)</li>
+                <li>Collez-la ci-dessous (sans <code>const firebaseConfig =</code> ni <code>;</code>):</li>
             </ol>
 
+            <div class="alert alert-info">
+                💡 Exemple correct : Copiez uniquement la partie entre les accolades <code>{ ... }</code>
+            </div>
+
             <textarea id="firebaseConfig" class="config-input" placeholder='{
-  "apiKey": "votre-api-key",
+  "apiKey": "AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
   "authDomain": "votre-projet.firebaseapp.com",
-  "databaseURL": "https://votre-projet.firebaseio.com",
+  "databaseURL": "https://votre-projet-default-rtdb.firebaseio.com",
   "projectId": "votre-projet",
   "storageBucket": "votre-projet.appspot.com",
-  "messagingSenderId": "123456789",
-  "appId": "votre-app-id"
+  "messagingSenderId": "123456789012",
+  "appId": "1:123456789012:web:abcdef123456"
 }'></textarea>
 
             <div class="alert alert-warning">
@@ -553,8 +557,30 @@
 
         window.initializeFirebase = function() {
             try {
-                const configText = document.getElementById('firebaseConfig').value.trim();
+                let configText = document.getElementById('firebaseConfig').value.trim();
+                
+                // Nettoyer le texte pour supprimer les commentaires et caractères invisibles
+                configText = configText
+                    .replace(/\/\/.*/g, '')  // Supprimer les commentaires //
+                    .replace(/\/\*[\s\S]*?\*\//g, '')  // Supprimer les commentaires /* */
+                    .replace(/^\s*const\s+\w+\s*=\s*/, '')  // Supprimer "const firebaseConfig = "
+                    .replace(/;?\s*$/, '')  // Supprimer le ; final
+                    .trim();
+                
+                // Vérifier que ça commence bien par {
+                if (!configText.startsWith('{')) {
+                    throw new Error('La configuration doit être un objet JSON valide commençant par {');
+                }
+                
                 const config = JSON.parse(configText);
+                
+                // Vérifier les champs obligatoires
+                const requiredFields = ['apiKey', 'authDomain', 'databaseURL', 'projectId'];
+                const missingFields = requiredFields.filter(field => !config[field]);
+                
+                if (missingFields.length > 0) {
+                    throw new Error(`Champs manquants: ${missingFields.join(', ')}`);
+                }
                 
                 const app = initializeApp(config);
                 db = getDatabase(app);
@@ -566,7 +592,7 @@
                 
                 alert('✅ Firebase initialisé avec succès!');
             } catch (error) {
-                alert('❌ Erreur de configuration: ' + error.message);
+                alert('❌ Erreur de configuration: ' + error.message + '\n\nAssurez-vous de copier uniquement l\'objet JSON (de { à }) sans le code JavaScript autour.');
             }
         };
 
