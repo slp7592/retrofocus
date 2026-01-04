@@ -36,6 +36,7 @@
             justify-content: center;
             z-index: 1000;
             padding: 20px;
+            overflow-y: auto;
         }
 
         .setup-content {
@@ -45,6 +46,7 @@
             max-width: 600px;
             width: 100%;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            margin: 20px 0;
         }
 
         .setup-content h2 {
@@ -59,12 +61,31 @@
             line-height: 1.6;
         }
 
-        .setup-content code {
-            background: #f7fafc;
-            padding: 2px 6px;
-            border-radius: 4px;
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2d3748;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
             font-family: monospace;
-            color: #e53e3e;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
         }
 
         .config-input {
@@ -77,11 +98,6 @@
             margin-bottom: 15px;
             resize: vertical;
             min-height: 100px;
-        }
-
-        .config-input:focus {
-            outline: none;
-            border-color: #667eea;
         }
 
         header {
@@ -356,10 +372,6 @@
             animation: pulse 2s infinite;
         }
 
-        .status-indicator.offline {
-            background: #f56565;
-        }
-
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
@@ -370,12 +382,6 @@
             border-radius: 8px;
             margin-bottom: 15px;
             font-size: 14px;
-        }
-
-        .alert-info {
-            background: #bee3f8;
-            color: #2c5282;
-            border-left: 4px solid #4299e1;
         }
 
         .alert-warning {
@@ -405,55 +411,67 @@
     <div id="setupModal" class="setup-modal">
         <div class="setup-content">
             <h2>🔧 Configuration Firebase</h2>
-            <p>Pour utiliser cet outil en collaboration temps réel, vous devez configurer Firebase (gratuit):</p>
+            <p>Pour utiliser cet outil en collaboration temps réel, configurez Firebase (gratuit) :</p>
             
             <ol style="color: #4a5568; margin: 20px 0; line-height: 1.8;">
                 <li>Créez un projet sur <a href="https://console.firebase.google.com" target="_blank" style="color: #667eea;">Firebase Console</a></li>
-                <li>Activez <strong>Realtime Database</strong></li>
-                <li>Dans les paramètres du projet, copiez <strong>uniquement l'objet JSON</strong> (de <code>{</code> à <code>}</code>)</li>
-                <li>Collez-la ci-dessous (sans <code>const firebaseConfig =</code> ni <code>;</code>):</li>
+                <li>Activez <strong>Realtime Database</strong> (mode test)</li>
+                <li>Paramètres → Vos applications → Web (icône &lt;/&gt;)</li>
+                <li>Copiez chaque valeur dans les champs ci-dessous :</li>
             </ol>
 
-            <div class="alert alert-info">
-                💡 Exemple correct : Copiez uniquement la partie entre les accolades <code>{ ... }</code>
+            <div class="form-group">
+                <label>API Key *</label>
+                <input type="text" id="apiKey" placeholder="AIzaSy...">
             </div>
 
-            <textarea id="firebaseConfig" class="config-input" placeholder='{
-  "apiKey": "AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-  "authDomain": "votre-projet.firebaseapp.com",
-  "databaseURL": "https://votre-projet-default-rtdb.firebaseio.com",
-  "projectId": "votre-projet",
-  "storageBucket": "votre-projet.appspot.com",
-  "messagingSenderId": "123456789012",
-  "appId": "1:123456789012:web:abcdef123456"
-}'></textarea>
-
-            <div class="alert alert-warning">
-                ⚠️ Après configuration, ajoutez ces règles de sécurité dans Firebase:
+            <div class="form-group">
+                <label>Auth Domain *</label>
+                <input type="text" id="authDomain" placeholder="votre-projet.firebaseapp.com">
             </div>
 
-            <textarea class="config-input" readonly style="min-height: 200px;">{
+            <div class="form-group">
+                <label>Database URL *</label>
+                <input type="text" id="databaseURL" placeholder="https://votre-projet-default-rtdb.europe-west1.firebasedatabase.app">
+            </div>
+
+            <div class="form-group">
+                <label>Project ID *</label>
+                <input type="text" id="projectId" placeholder="votre-projet">
+            </div>
+
+            <div class="form-group">
+                <label>Storage Bucket</label>
+                <input type="text" id="storageBucket" placeholder="votre-projet.appspot.com">
+            </div>
+
+            <div class="form-group">
+                <label>Messaging Sender ID</label>
+                <input type="text" id="messagingSenderId" placeholder="123456789012">
+            </div>
+
+            <div class="form-group">
+                <label>App ID</label>
+                <input type="text" id="appId" placeholder="1:123456789012:web:abc123">
+            </div>
+
+            <div class="alert alert-warning" style="margin-top: 20px;">
+                ⚠️ Après initialisation, ajoutez ces règles de sécurité dans Firebase (onglet Règles) :
+            </div>
+
+            <textarea class="config-input" readonly style="min-height: 180px;">{
   "rules": {
     "sessions": {
       "$sessionId": {
         ".read": true,
-        ".write": true,
-        "positive": {
-          ".validate": "newData.hasChildren(['id', 'content', 'author', 'votes', 'timestamp'])"
-        },
-        "negative": {
-          ".validate": "newData.hasChildren(['id', 'content', 'author', 'votes', 'timestamp'])"
-        },
-        "action": {
-          ".validate": "newData.hasChildren(['id', 'content', 'author', 'votes', 'timestamp'])"
-        }
+        ".write": true
       }
     }
   }
 }</textarea>
 
             <button class="btn btn-primary" onclick="initializeFirebase()" style="width: 100%; margin-top: 10px;">
-                🚀 Initialiser
+                🚀 Initialiser Firebase
             </button>
         </div>
     </div>
@@ -557,7 +575,6 @@
 
         window.initializeFirebase = function() {
             try {
-                // Récupérer les valeurs des champs individuels
                 const config = {
                     apiKey: document.getElementById('apiKey').value.trim(),
                     authDomain: document.getElementById('authDomain').value.trim(),
@@ -568,7 +585,6 @@
                     appId: document.getElementById('appId').value.trim()
                 };
                 
-                // Vérifier que tous les champs obligatoires sont remplis
                 const requiredFields = ['apiKey', 'authDomain', 'databaseURL', 'projectId'];
                 const missingFields = requiredFields.filter(field => !config[field]);
                 
@@ -576,11 +592,9 @@
                     throw new Error(`Champs obligatoires manquants: ${missingFields.join(', ')}`);
                 }
                 
-                // Initialiser Firebase
                 const app = initializeApp(config);
                 db = getDatabase(app);
                 
-                // Sauvegarder la config pour la prochaine fois
                 localStorage.setItem('firebaseConfig', JSON.stringify(config));
                 
                 document.getElementById('setupModal').style.display = 'none';
@@ -589,17 +603,15 @@
                 alert('✅ Firebase initialisé avec succès!');
             } catch (error) {
                 alert('❌ Erreur de configuration: ' + error.message);
-                console.error('Erreur détaillée:', error);
+                console.error('Erreur:', error);
             }
         };
 
-        // Vérifier si une config existe déjà
         window.addEventListener('load', () => {
             const savedConfig = localStorage.getItem('firebaseConfig');
             if (savedConfig) {
                 try {
                     const config = JSON.parse(savedConfig);
-                    // Pré-remplir les champs
                     document.getElementById('apiKey').value = config.apiKey || '';
                     document.getElementById('authDomain').value = config.authDomain || '';
                     document.getElementById('databaseURL').value = config.databaseURL || '';
@@ -607,10 +619,9 @@
                     document.getElementById('storageBucket').value = config.storageBucket || '';
                     document.getElementById('messagingSenderId').value = config.messagingSenderId || '';
                     document.getElementById('appId').value = config.appId || '';
-                    // Auto-initialiser
                     initializeFirebase();
                 } catch (e) {
-                    console.error('Erreur de chargement de la config:', e);
+                    console.error('Erreur:', e);
                 }
             }
         });
@@ -633,7 +644,7 @@
                 setupRealtimeListener();
                 updateSessionDisplay();
             }).catch(error => {
-                alert('Erreur lors de la création: ' + error.message);
+                alert('Erreur: ' + error.message);
             });
         };
 
@@ -660,7 +671,7 @@
 
             ['positive', 'negative', 'action'].forEach(type => {
                 const typeRef = ref(db, `sessions/${currentSessionId}/${type}`);
-                onValue(typeRef, (snapshot) => {
+                onValue(typeRef, () => {
                     renderCards();
                 });
             });
@@ -678,19 +689,18 @@
 
         window.copySessionId = function() {
             navigator.clipboard.writeText(currentSessionId).then(() => {
-                alert('✅ ID copié dans le presse-papier!');
+                alert('✅ ID copié!');
             });
         };
 
         function getUserName() {
             let name = document.getElementById('userName').value.trim();
-            if (!name) name = 'Anonyme';
-            return name.substring(0, 30);
+            return name ? name.substring(0, 30) : 'Anonyme';
         }
 
         window.addCard = async function(type) {
             if (!currentSessionRef) {
-                alert('Veuillez d\'abord créer ou rejoindre une session');
+                alert('Créez ou rejoignez une session d\'abord');
                 return;
             }
 
@@ -714,7 +724,7 @@
                 await set(newCardRef, card);
                 input.value = '';
             } catch (error) {
-                alert('Erreur lors de l\'ajout: ' + error.message);
+                alert('Erreur: ' + error.message);
             }
         };
 
@@ -725,7 +735,7 @@
             try {
                 await remove(cardRef);
             } catch (error) {
-                alert('Erreur lors de la suppression: ' + error.message);
+                alert('Erreur: ' + error.message);
             }
         };
 
@@ -734,7 +744,7 @@
             try {
                 await update(cardRef, { votes: (currentVotes || 0) + 1 });
             } catch (error) {
-                alert('Erreur lors du vote: ' + error.message);
+                alert('Erreur: ' + error.message);
             }
         };
 
@@ -758,8 +768,8 @@
                                 <span class="card-author">${escapeHtml(card.author)}</span>
                                 <div class="card-actions">
                                     <div class="votes">👍 ${card.votes || 0}</div>
-                                    <button class="card-btn" onclick="voteCard('${type}', '${card.key}', ${card.votes || 0})" title="Voter">⬆️</button>
-                                    <button class="card-btn" onclick="deleteCard('${type}', '${card.key}')" title="Supprimer">🗑️</button>
+                                    <button class="card-btn" onclick="voteCard('${type}', '${card.key}', ${card.votes || 0})">⬆️</button>
+                                    <button class="card-btn" onclick="deleteCard('${type}', '${card.key}')">🗑️</button>
                                 </div>
                             </div>
                         </div>
@@ -775,8 +785,7 @@
         }
 
         window.clearAll = async function() {
-            if (!currentSessionRef) return;
-            if (!confirm('⚠️ Supprimer toutes les données ?')) return;
+            if (!currentSessionRef || !confirm('⚠️ Supprimer toutes les données ?')) return;
             
             try {
                 await set(currentSessionRef, { positive: {}, negative: {}, action: {} });
@@ -825,7 +834,7 @@
         window.exportData = async function() {
             if (!currentSessionRef) return;
 
-            const snapshot = await onValue(currentSessionRef, (snap) => {
+            onValue(currentSessionRef, (snap) => {
                 const data = snap.val();
                 const exportObj = {
                     sessionId: currentSessionId,
@@ -843,7 +852,6 @@
             }, { onlyOnce: true });
         };
 
-        // Gestion des événements clavier
         ['Positive', 'Negative', 'Action'].forEach(type => {
             const input = document.getElementById(`input${type}`);
             if (input) {
