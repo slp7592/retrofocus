@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'unsafe-inline' https://www.gstatic.com https://firebasestorage.googleapis.com; style-src 'unsafe-inline'; connect-src https://*.firebaseio.com https://*.googleapis.com wss://*.firebaseio.com;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'unsafe-inline' https://www.gstatic.com https://firebasestorage.googleapis.com; style-src 'unsafe-inline'; connect-src https://*.firebaseio.com https://*.googleapis.com https://www.gstatic.com wss://*.firebaseio.com;">
     <title>Rétrospective Sprint</title>
     <style>
         * {
@@ -627,16 +627,28 @@
             if (savedConfig) {
                 try {
                     const config = JSON.parse(savedConfig);
-                    document.getElementById('apiKey').value = config.apiKey || '';
-                    document.getElementById('authDomain').value = config.authDomain || '';
-                    document.getElementById('databaseURL').value = config.databaseURL || '';
-                    document.getElementById('projectId').value = config.projectId || '';
-                    document.getElementById('storageBucket').value = config.storageBucket || '';
-                    document.getElementById('messagingSenderId').value = config.messagingSenderId || '';
-                    document.getElementById('appId').value = config.appId || '';
-                    initializeFirebase();
+                    // Initialiser Firebase directement sans afficher le modal
+                    const app = initializeApp(config);
+                    db = getDatabase(app);
+
+                    // Masquer le modal et afficher l'application
+                    document.getElementById('setupModal').style.display = 'none';
+                    document.getElementById('mainApp').style.display = 'block';
                 } catch (e) {
-                    console.error('Erreur:', e);
+                    console.error('Erreur de chargement de la configuration:', e);
+                    // En cas d'erreur, pré-remplir les champs et afficher le modal
+                    try {
+                        const config = JSON.parse(savedConfig);
+                        document.getElementById('apiKey').value = config.apiKey || '';
+                        document.getElementById('authDomain').value = config.authDomain || '';
+                        document.getElementById('databaseURL').value = config.databaseURL || '';
+                        document.getElementById('projectId').value = config.projectId || '';
+                        document.getElementById('storageBucket').value = config.storageBucket || '';
+                        document.getElementById('messagingSenderId').value = config.messagingSenderId || '';
+                        document.getElementById('appId').value = config.appId || '';
+                    } catch (parseError) {
+                        console.error('Erreur de parsing:', parseError);
+                    }
                 }
             }
         });
