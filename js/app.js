@@ -425,6 +425,12 @@ function updateSessionUI(sessionId) {
         headerSessionIdText.textContent = sessionId;
     }
 
+    // Afficher la section currentSession (contient participants et autres infos)
+    const currentSession = document.getElementById('currentSession');
+    if (currentSession) {
+        currentSession.style.display = 'block';
+    }
+
     // Afficher le compteur de votes
     updateVoteDisplay();
 }
