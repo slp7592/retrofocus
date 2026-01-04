@@ -52,9 +52,13 @@ export async function addCard(type, content) {
         id: Date.now() + Math.random(),
         content: content.trim().substring(0, 200),
         author: getUserName(),
-        votes: type === 'action' ? undefined : 0, // Pas de votes pour les actions
         timestamp: Date.now()
     };
+
+    // Ajouter le champ votes uniquement pour les points positifs et négatifs
+    if (type !== 'action') {
+        card.votes = 0;
+    }
 
     const typeRef = ref(db, `sessions/${sessionId}/${type}`);
     const newCardRef = push(typeRef);
