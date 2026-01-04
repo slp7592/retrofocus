@@ -40,17 +40,60 @@ export function toggleElement(element, show) {
 }
 
 /**
+ * Affiche une popup personnalisée
+ */
+function showModal(icon, message, buttons) {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('customModal');
+        const modalIcon = document.getElementById('modalIcon');
+        const modalMessage = document.getElementById('modalMessage');
+        const modalButtons = document.getElementById('modalButtons');
+
+        modalIcon.textContent = icon;
+        modalMessage.textContent = message;
+        modalButtons.innerHTML = '';
+
+        buttons.forEach(button => {
+            const btn = document.createElement('button');
+            btn.className = `modal-btn ${button.className || 'modal-btn-primary'}`;
+            btn.textContent = button.text;
+            btn.onclick = () => {
+                modal.style.display = 'none';
+                resolve(button.value);
+            };
+            modalButtons.appendChild(btn);
+        });
+
+        modal.style.display = 'flex';
+    });
+}
+
+/**
  * Affiche un message d'erreur
  */
 export function showError(message) {
-    alert('❌ ' + message);
+    return showModal('❌', message, [
+        { text: 'OK', value: true, className: 'modal-btn-danger' }
+    ]);
 }
 
 /**
  * Affiche un message de succès
  */
 export function showSuccess(message) {
-    alert('✅ ' + message);
+    return showModal('✅', message, [
+        { text: 'OK', value: true, className: 'modal-btn-primary' }
+    ]);
+}
+
+/**
+ * Affiche une popup de confirmation
+ */
+export function showConfirm(message) {
+    return showModal('⚠️', message, [
+        { text: 'Annuler', value: false, className: 'modal-btn-secondary' },
+        { text: 'Confirmer', value: true, className: 'modal-btn-danger' }
+    ]);
 }
 
 /**

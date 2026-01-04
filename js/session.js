@@ -8,6 +8,7 @@ let db = null;
 let currentSessionRef = null;
 let currentSessionId = null;
 let currentUserId = null;
+let currentUserName = null;
 let isOwner = false;
 let listeners = [];
 let votesUsed = 0;
@@ -49,14 +50,19 @@ function getUserId() {
 /**
  * Crée une nouvelle session
  */
-export async function createNewSession() {
+export async function createNewSession(userName) {
     if (!db) {
         throw new Error('Firebase non initialisé');
+    }
+
+    if (!userName || !userName.trim()) {
+        throw new Error('Veuillez entrer un nom d\'utilisateur');
     }
 
     currentSessionId = generateSessionId();
     currentSessionRef = ref(db, `sessions/${currentSessionId}`);
     currentUserId = getUserId();
+    currentUserName = userName.trim().substring(0, 30);
     isOwner = true;
 
     const initialData = {
@@ -83,7 +89,7 @@ export async function createNewSession() {
 /**
  * Rejoint une session existante
  */
-export async function joinSession(sessionId) {
+export async function joinSession(sessionId, userName) {
     if (!db) {
         throw new Error('Firebase non initialisé');
     }
@@ -92,9 +98,14 @@ export async function joinSession(sessionId) {
         throw new Error('ID de session invalide');
     }
 
+    if (!userName || !userName.trim()) {
+        throw new Error('Veuillez entrer un nom d\'utilisateur');
+    }
+
     currentSessionId = sessionId.trim();
     currentSessionRef = ref(db, `sessions/${currentSessionId}`);
     currentUserId = getUserId();
+    currentUserName = userName.trim().substring(0, 30);
 
     // Vérifier si l'utilisateur est le propriétaire
     return new Promise((resolve, reject) => {
@@ -138,6 +149,13 @@ export function isSessionOwner() {
  */
 export function getCurrentUserId() {
     return currentUserId;
+}
+
+/**
+ * Récupère le nom de l'utilisateur actuel
+ */
+export function getCurrentUserName() {
+    return currentUserName;
 }
 
 /**
@@ -186,7 +204,7 @@ export function setupRealtimeListener(type, callback) {
 /**
  * Efface toutes les données de la session courante (OP uniquement)
  */
-export async function clearSession() {
+export async function clearSession(showConfirmCallback) {
     if (!currentSessionRef) {
         throw new Error('Aucune session active');
     }
@@ -195,8 +213,10 @@ export async function clearSession() {
         throw new Error('Seul l\'organisateur peut effacer la session');
     }
 
-    const confirmMessage = '⚠️ Supprimer toutes les données de cette session ?';
-    if (!confirm(confirmMessage)) {
+    const confirmMessage = 'Supprimer toutes les données de cette session ?';
+    const confirmed = await showConfirmCallback(confirmMessage);
+
+    if (!confirmed) {
         return false;
     }
 
@@ -293,6 +313,7 @@ export function cleanup() {
     currentSessionRef = null;
     currentSessionId = null;
     currentUserId = null;
+    currentUserName = null;
     isOwner = false;
     votesUsed = 0;
 }

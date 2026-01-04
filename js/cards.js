@@ -1,5 +1,5 @@
 import { ref, set, push, remove, update, onValue } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
-import { getCurrentSessionId, isSessionOwner, canVote, incrementVotesUsed } from './session.js';
+import { getCurrentSessionId, getCurrentUserName, isSessionOwner, canVote, incrementVotesUsed } from './session.js';
 
 /**
  * Module de gestion des cartes de rétrospective
@@ -15,14 +15,11 @@ export function initialize(database) {
 }
 
 /**
- * Récupère le nom de l'utilisateur depuis l'input
+ * Récupère le nom de l'utilisateur depuis la session
  */
 function getUserName() {
-    const input = document.getElementById('userName');
-    if (!input) return 'Anonyme';
-
-    let name = input.value.trim();
-    return name ? name.substring(0, 30) : 'Anonyme';
+    const name = getCurrentUserName();
+    return name || 'Anonyme';
 }
 
 /**
@@ -77,7 +74,7 @@ export async function addCard(type, content) {
  * Pour les actions : OP uniquement
  * Pour les autres : auteur ou OP uniquement
  */
-export async function deleteCard(type, key, cardAuthor) {
+export async function deleteCard(type, key, cardAuthor, showConfirmCallback) {
     const sessionId = getCurrentSessionId();
     if (!sessionId) {
         throw new Error('Aucune session active');
@@ -96,7 +93,8 @@ export async function deleteCard(type, key, cardAuthor) {
         throw new Error('Vous ne pouvez supprimer que vos propres cartes');
     }
 
-    if (!confirm('Supprimer cette carte ?')) {
+    const confirmed = await showConfirmCallback('Supprimer cette carte ?');
+    if (!confirmed) {
         return false;
     }
 

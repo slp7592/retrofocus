@@ -26,7 +26,7 @@ async function initializeApp() {
         const { db, error } = Config.initializeFirebase(config);
 
         if (error) {
-            UI.showError('Erreur d\'initialisation Firebase: ' + error.message);
+            await UI.showError('Erreur d\'initialisation Firebase: ' + error.message);
             showSetupModal();
             return;
         }
@@ -73,7 +73,7 @@ function showSetupModal() {
 /**
  * Gère l'initialisation Firebase depuis le formulaire
  */
-window.initializeFirebase = function() {
+window.initializeFirebase = async function() {
     const config = {
         apiKey: UI.getInputValue('apiKey'),
         authDomain: UI.getInputValue('authDomain'),
@@ -87,7 +87,7 @@ window.initializeFirebase = function() {
     // Valider la configuration
     const validation = Config.validateConfig(config);
     if (!validation.valid) {
-        UI.showError(validation.error);
+        await UI.showError(validation.error);
         return;
     }
 
@@ -96,7 +96,7 @@ window.initializeFirebase = function() {
 
     const { db, error } = Config.initializeFirebase(config);
     if (error) {
-        UI.showError('Erreur d\'initialisation: ' + error.message);
+        await UI.showError('Erreur d\'initialisation: ' + error.message);
         return;
     }
 
@@ -146,9 +146,9 @@ window.copyShareLink = async function(element) {
     const link = element.textContent.trim();
     const success = await UI.copyToClipboard(link);
     if (success) {
-        UI.showSuccess('Lien copié dans le presse-papier !');
+        await UI.showSuccess('Lien copié dans le presse-papier !');
     } else {
-        UI.showError('Impossible de copier le lien');
+        await UI.showError('Impossible de copier le lien');
     }
 };
 
@@ -160,6 +160,18 @@ window.closeConfigAndStart = function() {
     UI.toggleElement(document.getElementById('mainApp'), true);
     setupEventListeners();
 };
+
+/**
+ * Verrouille l'input du nom d'utilisateur après jonction/création de session
+ */
+function lockUserNameInput() {
+    const userNameInput = document.getElementById('userName');
+    if (userNameInput) {
+        userNameInput.disabled = true;
+        userNameInput.style.backgroundColor = '#e2e8f0';
+        userNameInput.style.cursor = 'not-allowed';
+    }
+}
 
 /**
  * Configure les écouteurs d'événements
@@ -213,14 +225,21 @@ function setupCardsListeners() {
  */
 window.createNewSession = async function() {
     try {
-        const sessionId = await Session.createNewSession();
+        const userName = UI.getInputValue('userName');
+        if (!userName) {
+            await UI.showError('Veuillez entrer un nom d\'utilisateur');
+            return;
+        }
+
+        const sessionId = await Session.createNewSession(userName);
+        lockUserNameInput();
         setupCardsListeners();
         setupTimerListener();
         updateUIPermissions();
         updateSessionUI(sessionId);
-        UI.showSuccess('Session créée : ' + sessionId);
+        await UI.showSuccess('Session créée : ' + sessionId);
     } catch (error) {
-        UI.showError(error.message);
+        await UI.showError(error.message);
     }
 };
 
@@ -232,18 +251,25 @@ async function handleJoinSession() {
     try {
         const sessionId = UI.getInputValue('sessionIdInput');
         if (!sessionId) {
-            UI.showError('Veuillez entrer un ID de session');
+            await UI.showError('Veuillez entrer un ID de session');
             return;
         }
 
-        await Session.joinSession(sessionId);
+        const userName = UI.getInputValue('userName');
+        if (!userName) {
+            await UI.showError('Veuillez entrer un nom d\'utilisateur');
+            return;
+        }
+
+        await Session.joinSession(sessionId, userName);
+        lockUserNameInput();
         setupCardsListeners();
         setupTimerListener();
         updateUIPermissions();
         updateSessionUI(sessionId);
-        UI.showSuccess('Session rejointe : ' + sessionId);
+        await UI.showSuccess('Session rejointe : ' + sessionId);
     } catch (error) {
-        UI.showError(error.message);
+        await UI.showError(error.message);
     }
 }
 
@@ -261,7 +287,7 @@ async function handleAddCard(type) {
         await Cards.addCard(type, content);
         UI.clearInput(inputId);
     } catch (error) {
-        UI.showError(error.message);
+        await UI.showError(error.message);
     }
 }
 
@@ -274,7 +300,7 @@ async function handleVoteCard(type, key, currentVotes) {
         await Cards.voteCard(type, key, currentVotes);
         updateVoteDisplay();
     } catch (error) {
-        UI.showError(error.message);
+        await UI.showError(error.message);
     }
 }
 
@@ -284,9 +310,9 @@ async function handleVoteCard(type, key, currentVotes) {
 window.deleteCard = handleDeleteCard;
 async function handleDeleteCard(type, key, cardAuthor) {
     try {
-        await Cards.deleteCard(type, key, cardAuthor);
+        await Cards.deleteCard(type, key, cardAuthor, UI.showConfirm);
     } catch (error) {
-        UI.showError(error.message);
+        await UI.showError(error.message);
     }
 }
 
@@ -296,15 +322,15 @@ async function handleDeleteCard(type, key, cardAuthor) {
 window.copySessionId = async function() {
     const sessionId = Session.getCurrentSessionId();
     if (!sessionId) {
-        UI.showError('Aucune session active');
+        await UI.showError('Aucune session active');
         return;
     }
 
     const success = await UI.copyToClipboard(sessionId);
     if (success) {
-        UI.showSuccess('ID de session copié !');
+        await UI.showSuccess('ID de session copié !');
     } else {
-        UI.showError('Impossible de copier l\'ID');
+        await UI.showError('Impossible de copier l\'ID');
     }
 };
 
@@ -313,23 +339,23 @@ window.copySessionId = async function() {
  */
 window.clearAll = async function() {
     try {
-        await Session.clearSession();
+        await Session.clearSession(UI.showConfirm);
     } catch (error) {
-        UI.showError(error.message);
+        await UI.showError(error.message);
     }
 };
 
 /**
  * Exporte les données
  */
-window.exportData = function() {
+window.exportData = async function() {
     try {
         Session.exportSession((data) => {
             const filename = `retrospective-${data.sessionId}-${new Date().toISOString().split('T')[0]}.json`;
             UI.downloadJSON(data, filename);
         });
     } catch (error) {
-        UI.showError(error.message);
+        await UI.showError(error.message);
     }
 };
 
@@ -427,25 +453,25 @@ function handleTimerUpdate(timeRemaining, isRunning) {
 /**
  * Gestion du minuteur (OP uniquement)
  */
-window.startTimer = function(minutes) {
+window.startTimer = async function(minutes) {
     if (!Session.isSessionOwner()) {
-        UI.showError('Seul l\'organisateur peut contrôler le timer');
+        await UI.showError('Seul l\'organisateur peut contrôler le timer');
         return;
     }
     Timer.start(minutes);
 };
 
-window.pauseTimer = function() {
+window.pauseTimer = async function() {
     if (!Session.isSessionOwner()) {
-        UI.showError('Seul l\'organisateur peut contrôler le timer');
+        await UI.showError('Seul l\'organisateur peut contrôler le timer');
         return;
     }
     Timer.pause();
 };
 
-window.resetTimer = function() {
+window.resetTimer = async function() {
     if (!Session.isSessionOwner()) {
-        UI.showError('Seul l\'organisateur peut contrôler le timer');
+        await UI.showError('Seul l\'organisateur peut contrôler le timer');
         return;
     }
     Timer.stop();

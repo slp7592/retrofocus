@@ -404,6 +404,118 @@ input[type="text"]:focus {
     background: #e2e8f0;
 }
 
+/* Popup personnalisé */
+.custom-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.custom-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+}
+
+.custom-modal-content {
+    position: relative;
+    background: white;
+    border-radius: 16px;
+    padding: 30px;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideIn 0.3s ease-out;
+    text-align: center;
+}
+
+.custom-modal-icon {
+    font-size: 48px;
+    margin-bottom: 15px;
+}
+
+.custom-modal-message {
+    color: #2d3748;
+    font-size: 16px;
+    line-height: 1.6;
+    margin-bottom: 25px;
+    white-space: pre-wrap;
+}
+
+.custom-modal-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.modal-btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    min-width: 100px;
+}
+
+.modal-btn-primary {
+    background: #667eea;
+    color: white;
+}
+
+.modal-btn-primary:hover {
+    background: #5568d3;
+    transform: translateY(-2px);
+}
+
+.modal-btn-danger {
+    background: #f56565;
+    color: white;
+}
+
+.modal-btn-danger:hover {
+    background: #e53e3e;
+    transform: translateY(-2px);
+}
+
+.modal-btn-secondary {
+    background: #e2e8f0;
+    color: #2d3748;
+}
+
+.modal-btn-secondary:hover {
+    background: #cbd5e0;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
 @media (max-width: 768px) {
     .columns {
         grid-template-columns: 1fr;
@@ -417,5 +529,10 @@ input[type="text"]:focus {
     .session-controls {
         flex-direction: column;
         align-items: stretch;
+    }
+
+    .custom-modal-content {
+        max-width: 90%;
+        padding: 20px;
     }
 }
