@@ -50,34 +50,39 @@ validateConfig(config)         // Valide la configuration
 ### 🔗 js/session.js
 **Responsabilités :**
 - Création de nouvelles sessions
-- Jonction à des sessions existantes
+- Jonction à des sessions existantes avec validation du nom unique
+- Gestion de la liste des participants en temps réel
+- Verrouillage du nom d'utilisateur après jonction
 - Gestion des listeners temps réel
-- Suppression de données
+- Suppression de données avec confirmation personnalisée
 - Export de session
 
 **API principale :**
 ```javascript
 initialize(database)           // Initialise avec la DB Firebase
-createNewSession()             // Crée une nouvelle session
-joinSession(sessionId)         // Rejoint une session
+createNewSession(userName)     // Crée une nouvelle session (nom obligatoire)
+joinSession(sessionId, userName)  // Rejoint une session (validation unicité)
 getCurrentSessionId()          // Récupère l'ID de session actuel
+getCurrentUserName()           // Récupère le nom d'utilisateur verrouillé
 setupRealtimeListener(type, callback)  // Configure listener temps réel
-clearSession()                 // Efface les données
+watchParticipants(callback)    // Observe les participants en temps réel
+clearSession(confirmCallback)  // Efface les données avec confirmation
 exportSession(callback)        // Exporte en JSON
 ```
 
 ### 🗂️ js/cards.js
 **Responsabilités :**
 - Ajout de cartes (positive/negative/action)
-- Suppression de cartes
+- Suppression de cartes avec confirmation personnalisée
 - Vote sur les cartes
 - Synchronisation temps réel des cartes
+- Utilisation du nom d'utilisateur verrouillé de la session
 
 **API principale :**
 ```javascript
 initialize(database)           // Initialise avec la DB Firebase
 addCard(type, content)         // Ajoute une carte
-deleteCard(type, key)          // Supprime une carte
+deleteCard(type, key, author, confirmCallback)  // Supprime une carte avec confirmation
 voteCard(type, key, votes)     // Vote pour une carte
 watchCards(type, callback)     // Observe les changements temps réel
 ```
@@ -87,22 +92,24 @@ watchCards(type, callback)     // Observe les changements temps réel
 - Gestion du minuteur
 - Démarrage/pause/arrêt
 - Mise à jour de l'affichage
+- Notification personnalisée de fin de timer
 
 **API principale :**
 ```javascript
-initialize(element)            // Initialise avec l'élément d'affichage
+initialize(element, onUpdate, onTimerEnd)  // Initialise avec l'élément et callbacks
 start(minutes)                 // Démarre le timer
 pause()                        // Met en pause
 stop()                         // Arrête et réinitialise
 getTimeRemaining()             // Temps restant en secondes
 isRunning()                    // Vérifie si actif
+syncFromFirebase(timerData)    // Synchronise avec Firebase (participants)
 ```
 
 ### 🎨 js/ui.js
 **Responsabilités :**
 - Utilitaires d'interface utilisateur
 - Gestion du DOM
-- Affichage des messages
+- **Système de popups personnalisées** (remplace alert/confirm natifs)
 - Copie dans le presse-papier
 - Rendu des cartes
 - Téléchargement de fichiers
@@ -111,12 +118,14 @@ isRunning()                    // Vérifie si actif
 ```javascript
 escapeHtml(text)               // Échappe HTML (sécurité XSS)
 copyToClipboard(text)          // Copie dans le presse-papier
-showError(message)             // Affiche une erreur
-showSuccess(message)           // Affiche un succès
+showError(message)             // Affiche une popup d'erreur personnalisée
+showSuccess(message)           // Affiche une popup de succès personnalisée
+showConfirm(message)           // Affiche une popup de confirmation personnalisée
 renderCards(container, cards, type, handlers)  // Rend les cartes
 downloadJSON(data, filename)   // Télécharge JSON
 getInputValue(id)              // Récupère valeur d'input
 setInputValue(id, value)       // Définit valeur d'input
+capitalize(str)                // Capitalise la première lettre
 ```
 
 ### 🚀 js/app.js
@@ -229,3 +238,12 @@ https://votre-domaine.github.io/retrofocus/?config=eyJhcGlLZXkiOiJBSXphU3kuLi4if
 - Échappement HTML contre XSS
 - Validation des entrées utilisateur
 - CSP (Content Security Policy) configuré
+- **Protection anti-usurpation d'identité** :
+  - Noms d'utilisateur uniques par session
+  - Verrouillage du nom après jonction
+  - Validation côté client et serveur (Firebase)
+  - Liste des participants visible en temps réel
+- **Popups sécurisées** :
+  - Système de notification personnalisé
+  - Impossible à bloquer par les préférences navigateur
+  - Animations élégantes et cohérentes

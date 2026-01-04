@@ -7,10 +7,13 @@ Application web collaborative pour rétrospectives agiles en temps réel, héber
 - 📝 **Trois colonnes** : Points positifs, Points à améliorer, Actions
 - 👥 **Collaboration temps réel** : Plusieurs utilisateurs simultanés
 - 👑 **Système de rôles** : Organisateur (OP) avec droits étendus
+- 🔐 **Protection anti-usurpation** : Noms d'utilisateur uniques par session
+- 👤 **Liste des participants** : Voir qui est présent en temps réel
 - 👍 **Système de votes** : Priorisez les sujets importants (sauf actions)
 - ⏱️ **Minuteur synchronisé** : Timer temps réel visible par tous, contrôlable par l'OP
 - 📥 **Export JSON** : Sauvegardez vos rétrospectives (OP uniquement)
 - 🔗 **Partage facile** : Un seul lien pour toute l'équipe
+- 🎨 **Popups modernes** : Notifications élégantes, jamais bloquées par le navigateur
 - 🔒 **Sécurisé** : Content Security Policy configuré + permissions
 - 💯 **100% Gratuit** : GitHub Pages + Firebase gratuit
 
@@ -51,6 +54,11 @@ Dans Firebase Console → Realtime Database → Règles :
       "$sessionId": {
         ".read": true,
         ".write": true,
+        "users": {
+          "$userId": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 30"
+          }
+        },
         "positive": {
           "$cardId": {
             ".validate": "newData.hasChildren(['id', 'content', 'author', 'votes', 'timestamp']) && newData.child('content').val().length <= 200 && newData.child('author').val().length <= 30"
@@ -93,19 +101,31 @@ Dans Firebase Console → Realtime Database → Règles :
 
 ### Créer une session (Organisateur)
 
-1. Entrez votre nom
+1. **Entrez votre nom** (obligatoire)
 2. Cliquez sur "**Nouvelle session**"
 3. Vous devenez automatiquement l'**organisateur** (OP)
-4. Partagez l'ID de session avec votre équipe
+4. **Votre nom est verrouillé** - impossible de le modifier pour éviter l'usurpation d'identité
+5. Partagez l'ID de session avec votre équipe
+6. Vous verrez la liste des participants rejoindre en temps réel
 
 ### Rejoindre une session (Participant)
 
-1. Entrez votre nom
+1. **Entrez votre nom** (obligatoire)
 2. Saisissez l'ID de session partagé
 3. Cliquez sur "**Rejoindre**"
-4. Vous rejoignez en tant que **participant**
-5. La section de session se masque automatiquement
-6. L'ID de session s'affiche dans le bandeau supérieur
+4. ⚠️ **Si le nom est déjà pris** par un autre participant, vous devrez en choisir un autre
+5. **Votre nom est verrouillé** après jonction pour éviter l'usurpation d'identité
+6. Vous rejoignez en tant que **participant**
+7. La section de session se masque automatiquement
+8. L'ID de session et la liste des participants s'affichent dans le bandeau supérieur
+
+### 🔐 Sécurité des identités
+
+- **Nom obligatoire** : Impossible de créer ou rejoindre une session sans nom d'utilisateur
+- **Noms uniques** : Deux participants ne peuvent pas avoir le même nom dans une session
+- **Verrouillage** : Une fois connecté, votre nom ne peut plus être modifié
+- **Changement d'appareil** : Si vous changez d'appareil avec le même navigateur/profil, vous pouvez rejoindre avec le même nom
+- **Liste visible** : Tous les participants voient qui est présent, permettant de repérer toute anomalie
 
 ### Ajouter des cartes
 
@@ -200,6 +220,8 @@ L'application utilise des modules ES6 pour une meilleure maintenabilité :
 - **CSP** : Content Security Policy configuré
 - **Validation** : Entrées utilisateur validées
 - **XSS** : Protection contre les failles XSS
+- **Anti-usurpation** : Noms d'utilisateur uniques et verrouillés par session
+- **Popups sécurisées** : Notifications personnalisées jamais bloquées
 - **Firebase** : Règles de sécurité configurables
 
 ## 📝 License

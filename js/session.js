@@ -67,6 +67,9 @@ export async function createNewSession(userName) {
 
     const initialData = {
         owner: currentUserId,
+        users: {
+            [currentUserId]: currentUserName
+        },
         positive: {},
         negative: {},
         action: {},
@@ -105,18 +108,44 @@ export async function joinSession(sessionId, userName) {
     currentSessionId = sessionId.trim();
     currentSessionRef = ref(db, `sessions/${currentSessionId}`);
     currentUserId = getUserId();
-    currentUserName = userName.trim().substring(0, 30);
+    const trimmedUserName = userName.trim().substring(0, 30);
 
-    // Vérifier si l'utilisateur est le propriétaire
+    // Vérifier si le nom est disponible
     return new Promise((resolve, reject) => {
-        onValue(currentSessionRef, (snapshot) => {
+        onValue(currentSessionRef, async (snapshot) => {
             const data = snapshot.val();
-            if (data && data.owner) {
-                isOwner = (data.owner === currentUserId);
-            } else {
-                isOwner = false;
+
+            if (!data) {
+                reject(new Error('Session introuvable'));
+                return;
             }
-            resolve(currentSessionId);
+
+            // Vérifier si l'utilisateur est le propriétaire
+            isOwner = (data.owner === currentUserId);
+
+            // Récupérer la liste des utilisateurs
+            const users = data.users || {};
+
+            // Vérifier si le nom est déjà pris par un autre userId
+            const existingUserWithSameName = Object.entries(users).find(
+                ([uid, name]) => name === trimmedUserName && uid !== currentUserId
+            );
+
+            if (existingUserWithSameName) {
+                reject(new Error(`Le nom "${trimmedUserName}" est déjà utilisé par un autre participant`));
+                return;
+            }
+
+            // Ajouter l'utilisateur à la liste
+            currentUserName = trimmedUserName;
+            const usersRef = ref(db, `sessions/${currentSessionId}/users/${currentUserId}`);
+
+            try {
+                await set(usersRef, currentUserName);
+                resolve(currentSessionId);
+            } catch (error) {
+                reject(error);
+            }
         }, { onlyOnce: true }, (error) => {
             reject(error);
         });
@@ -301,6 +330,24 @@ export function watchTimer(callback) {
     });
 
     listeners.push({ type: 'timer', unsubscribe });
+    return unsubscribe;
+}
+
+/**
+ * Configure un listener pour les participants
+ */
+export function watchParticipants(callback) {
+    if (!currentSessionRef) {
+        throw new Error('Aucune session active');
+    }
+
+    const usersRef = ref(db, `sessions/${currentSessionId}/users`);
+    const unsubscribe = onValue(usersRef, (snapshot) => {
+        const users = snapshot.val() || {};
+        callback(users);
+    });
+
+    listeners.push({ type: 'participants', unsubscribe });
     return unsubscribe;
 }
 

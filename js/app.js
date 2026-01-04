@@ -37,7 +37,7 @@ async function initializeApp() {
         // Initialiser les modules
         Session.initialize(db);
         Cards.initialize(db);
-        Timer.initialize(document.getElementById('timerDisplay'), handleTimerUpdate);
+        Timer.initialize(document.getElementById('timerDisplay'), handleTimerUpdate, handleTimerEnd);
 
         // Afficher l'interface principale
         UI.toggleElement(document.getElementById('setupModal'), false);
@@ -105,7 +105,7 @@ window.initializeFirebase = async function() {
 
     Session.initialize(db);
     Cards.initialize(db);
-    Timer.initialize(document.getElementById('timerDisplay'), handleTimerUpdate);
+    Timer.initialize(document.getElementById('timerDisplay'), handleTimerUpdate, handleTimerEnd);
 
     // Afficher le lien de partage dans le modal
     showShareLink(config);
@@ -235,6 +235,7 @@ window.createNewSession = async function() {
         lockUserNameInput();
         setupCardsListeners();
         setupTimerListener();
+        setupParticipantsListener();
         updateUIPermissions();
         updateSessionUI(sessionId);
         await UI.showSuccess('Session créée : ' + sessionId);
@@ -265,6 +266,7 @@ async function handleJoinSession() {
         lockUserNameInput();
         setupCardsListeners();
         setupTimerListener();
+        setupParticipantsListener();
         updateUIPermissions();
         updateSessionUI(sessionId);
         await UI.showSuccess('Session rejointe : ' + sessionId);
@@ -440,6 +442,59 @@ function setupTimerListener() {
 }
 
 /**
+ * Configure le listener pour afficher les participants
+ */
+function setupParticipantsListener() {
+    Session.watchParticipants((users) => {
+        updateParticipantsList(users);
+    });
+}
+
+/**
+ * Met à jour l'affichage de la liste des participants
+ */
+function updateParticipantsList(users) {
+    const participantsList = document.getElementById('participantsList');
+    const participantsCount = document.getElementById('participantsCount');
+    const participantsNames = document.getElementById('participantsNames');
+
+    if (!participantsList || !participantsCount || !participantsNames) return;
+
+    const userEntries = Object.entries(users);
+    const count = userEntries.length;
+
+    participantsCount.textContent = count;
+
+    if (count > 0) {
+        participantsList.style.display = 'block';
+
+        const currentUserId = Session.getCurrentUserId();
+
+        participantsNames.innerHTML = userEntries
+            .map(([userId, userName]) => {
+                let badgeClass = 'participant-badge';
+                let displayName = UI.escapeHtml(userName);
+
+                // Marquer l'utilisateur actuel
+                if (userId === currentUserId) {
+                    badgeClass += ' current-user';
+                    displayName += ' (vous)';
+                }
+
+                // Marquer l'organisateur
+                if (Session.isSessionOwner() && userId === currentUserId) {
+                    displayName = displayName.replace(' (vous)', ' (OP)');
+                }
+
+                return `<span class="${badgeClass}">${displayName}</span>`;
+            })
+            .join('');
+    } else {
+        participantsList.style.display = 'none';
+    }
+}
+
+/**
  * Callback pour mettre à jour le timer dans Firebase (OP uniquement)
  */
 function handleTimerUpdate(timeRemaining, isRunning) {
@@ -448,6 +503,13 @@ function handleTimerUpdate(timeRemaining, isRunning) {
             console.error('Erreur de mise à jour du timer:', error);
         });
     }
+}
+
+/**
+ * Callback pour la fin du timer
+ */
+async function handleTimerEnd() {
+    await UI.showSuccess('⏰ Temps écoulé !');
 }
 
 /**

@@ -20,6 +20,12 @@ Allez dans **Firebase Console** → **Realtime Database** → **Règles** et col
           ".validate": "newData.isString() && newData.val().length > 0"
         },
 
+        "users": {
+          "$userId": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 30"
+          }
+        },
+
         "positive": {
           "$cardId": {
             ".validate": "newData.hasChildren(['id', 'content', 'author', 'votes', 'timestamp']) && newData.child('content').val().length <= 200 && newData.child('author').val().length <= 30 && newData.child('votes').isNumber()"
@@ -61,10 +67,19 @@ Allez dans **Firebase Console** → **Realtime Database** → **Règles** et col
 
 Chaque session contient :
 - **owner** : ID de l'organisateur (OP) de la session
+- **users** : Liste des participants { userId: userName } pour prévenir l'usurpation d'identité
 - **positive** : Cartes des points positifs
 - **negative** : Cartes des points à améliorer
 - **action** : Cartes d'actions (OP uniquement)
 - **timer** : État du minuteur synchronisé
+
+### Validation des participants
+
+**users** :
+- Chaque userId est associé à un nom d'utilisateur
+- Le nom doit être une chaîne non vide
+- Maximum 30 caractères
+- Empêche deux participants différents d'avoir le même nom
 
 ### Validation des cartes
 

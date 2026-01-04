@@ -404,6 +404,26 @@ input[type="text"]:focus {
     background: #e2e8f0;
 }
 
+.participant-badge {
+    display: inline-block;
+    background: #edf2f7;
+    color: #2d3748;
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.participant-badge.owner {
+    background: #667eea;
+    color: white;
+}
+
+.participant-badge.current-user {
+    background: #48bb78;
+    color: white;
+}
+
 /* Popup personnalisé */
 .custom-modal {
     position: fixed;

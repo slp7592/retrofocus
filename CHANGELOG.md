@@ -1,5 +1,76 @@
 # Changelog
 
+## Version 3.2.0 - 2026-01-04
+
+### 🔐 Sécurité anti-usurpation et popups modernes
+
+#### ✨ Nouvelles fonctionnalités
+
+- **Protection anti-usurpation d'identité**
+  - Nom d'utilisateur obligatoire pour créer ou rejoindre une session
+  - Validation d'unicité : un nom ne peut être utilisé que par un seul participant par session
+  - Verrouillage du nom après jonction (impossible de le modifier)
+  - Permet à un même utilisateur de rejoindre depuis plusieurs appareils
+  - Message d'erreur clair si le nom est déjà pris : "Le nom X est déjà utilisé par un autre participant"
+
+- **Liste des participants en temps réel**
+  - Affichage de tous les participants actifs dans la session
+  - Badge coloré pour l'utilisateur actuel (vert)
+  - Badge coloré pour l'organisateur (violet)
+  - Compteur de participants
+  - Permet à l'équipe de repérer toute usurpation d'identité
+
+- **Système de popups personnalisées**
+  - Remplacement de tous les `alert()` natifs par des popups élégantes
+  - Remplacement de tous les `confirm()` natifs par des popups de confirmation
+  - Design moderne avec animations (fadeIn, slideIn)
+  - Impossible à bloquer par les préférences du navigateur
+  - Cohérence visuelle avec le reste de l'application
+  - Notification de fin de timer modernisée
+
+#### 🗄️ Structure Firebase
+
+- **Nouvelle structure `users`** dans les sessions
+  - Stocke `{ userId: userName }` pour chaque participant
+  - Permet la validation d'unicité des noms
+  - Règles de validation Firebase ajoutées
+
+#### 🔧 Améliorations techniques
+
+- `session.js` :
+  - `createNewSession(userName)` valide le nom obligatoire
+  - `joinSession(sessionId, userName)` vérifie l'unicité du nom
+  - `getCurrentUserName()` récupère le nom verrouillé
+  - `watchParticipants(callback)` observe les participants en temps réel
+- `cards.js` :
+  - Utilise le nom d'utilisateur verrouillé de la session
+  - `deleteCard()` prend un callback pour confirmation personnalisée
+- `ui.js` :
+  - `showError(message)` retourne une Promise avec popup personnalisée
+  - `showSuccess(message)` retourne une Promise avec popup personnalisée
+  - `showConfirm(message)` retourne une Promise avec popup de confirmation
+- `app.js` :
+  - `lockUserNameInput()` désactive et grise l'input après jonction
+  - `setupParticipantsListener()` configure l'affichage des participants
+  - `updateParticipantsList(users)` met à jour l'UI avec badges
+  - `handleTimerEnd()` utilise la popup personnalisée
+- `timer.js` :
+  - Callback `onTimerEnd` pour notification personnalisée de fin
+
+#### 📚 Documentation
+
+- Mise à jour de **README.md** avec section "Sécurité des identités"
+- Mise à jour de **ARCHITECTURE.md** avec nouvelles APIs
+- Mise à jour de **FIREBASE_RULES.md** avec structure `users`
+- Ajout de cette entrée dans **CHANGELOG.md**
+
+#### 🔒 Sécurité
+
+- Validation côté client (JavaScript) ET côté serveur (règles Firebase)
+- Protection contre l'usurpation d'identité sans nécessiter de mots de passe
+- Liste des participants visible pour transparence
+- Popups personnalisées impossible à bloquer
+
 ## Version 3.1.0 - 2026-01-04
 
 ### 🎉 Améliorations UX et quota de votes

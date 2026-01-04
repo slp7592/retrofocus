@@ -6,13 +6,15 @@ let timerInterval = null;
 let timeRemaining = 0;
 let displayElement = null;
 let updateCallback = null;
+let notificationCallback = null;
 
 /**
  * Initialise le module avec l'élément d'affichage et callback de mise à jour
  */
-export function initialize(element, onUpdate = null) {
+export function initialize(element, onUpdate = null, onTimerEnd = null) {
     displayElement = element;
     updateCallback = onUpdate;
+    notificationCallback = onTimerEnd;
     updateDisplay();
 }
 
@@ -40,7 +42,9 @@ export function start(minutes) {
 
         if (timeRemaining <= 0) {
             stop();
-            alert('⏰ Temps écoulé !');
+            if (notificationCallback) {
+                notificationCallback();
+            }
         }
     }, 1000);
 
