@@ -1,5 +1,38 @@
 # Changelog
 
+## Version 3.0.0 - 2026-01-04
+
+### 🎉 Système de permissions et timer synchronisé
+
+#### ✨ Nouvelles fonctionnalités majeures
+
+- **Système de rôles Organisateur/Participant**
+  - L'utilisateur qui crée la session devient l'Organisateur (OP)
+  - ID utilisateur unique stocké dans localStorage
+  - Permissions différenciées selon le rôle
+
+- **Permissions de l'Organisateur (OP)** :
+  - Seul l'OP peut ajouter/supprimer des actions
+  - Seul l'OP peut contrôler le minuteur
+  - Seul l'OP peut effacer toutes les données
+  - Seul l'OP peut exporter la rétrospective
+
+- **Actions sans votes**
+  - Les cartes d'actions n'ont plus de système de vote
+  - Interface simplifiée pour les actions
+  - Réservées à l'organisateur uniquement
+
+- **Minuteur synchronisé en temps réel**
+  - Le timer est stocké dans Firebase
+  - Tous les participants voient le même décompte
+  - Seul l'OP peut le contrôler
+  - Synchronisation automatique même en cas de latence réseau
+
+- **UI adaptative selon les permissions**
+  - Boutons et contrôles cachés pour les participants
+  - Input des actions désactivé pour les non-OP
+  - Messages d'erreur explicites si tentative d'action non autorisée
+
 ## Version 2.0.0 - 2026-01-04
 
 ### 🎉 Refactoring majeur et nouvelles fonctionnalités

@@ -1,4 +1,4 @@
-import { ref, set, onValue } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+import { ref, set, onValue, update } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 
 /**
  * Module de gestion des sessions de rétrospective
@@ -7,6 +7,8 @@ import { ref, set, onValue } from 'https://www.gstatic.com/firebasejs/10.7.1/fir
 let db = null;
 let currentSessionRef = null;
 let currentSessionId = null;
+let currentUserId = null;
+let isOwner = false;
 let listeners = [];
 
 /**
@@ -24,6 +26,25 @@ function generateSessionId() {
 }
 
 /**
+ * Génère un ID utilisateur unique
+ */
+function generateUserId() {
+    return 'user-' + Date.now() + '-' + Math.random().toString(36).substring(2, 9);
+}
+
+/**
+ * Récupère ou crée un ID utilisateur depuis le localStorage
+ */
+function getUserId() {
+    let userId = localStorage.getItem('retrofocus_userId');
+    if (!userId) {
+        userId = generateUserId();
+        localStorage.setItem('retrofocus_userId', userId);
+    }
+    return userId;
+}
+
+/**
  * Crée une nouvelle session
  */
 export async function createNewSession() {
@@ -33,8 +54,20 @@ export async function createNewSession() {
 
     currentSessionId = generateSessionId();
     currentSessionRef = ref(db, `sessions/${currentSessionId}`);
+    currentUserId = getUserId();
+    isOwner = true;
 
-    const initialData = { positive: {}, negative: {}, action: {} };
+    const initialData = {
+        owner: currentUserId,
+        positive: {},
+        negative: {},
+        action: {},
+        timer: {
+            timeRemaining: 0,
+            isRunning: false,
+            lastUpdate: Date.now()
+        }
+    };
 
     try {
         await set(currentSessionRef, initialData);
@@ -48,7 +81,7 @@ export async function createNewSession() {
 /**
  * Rejoint une session existante
  */
-export function joinSession(sessionId) {
+export async function joinSession(sessionId) {
     if (!db) {
         throw new Error('Firebase non initialisé');
     }
@@ -59,8 +92,22 @@ export function joinSession(sessionId) {
 
     currentSessionId = sessionId.trim();
     currentSessionRef = ref(db, `sessions/${currentSessionId}`);
+    currentUserId = getUserId();
 
-    return currentSessionId;
+    // Vérifier si l'utilisateur est le propriétaire
+    return new Promise((resolve, reject) => {
+        onValue(currentSessionRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data && data.owner) {
+                isOwner = (data.owner === currentUserId);
+            } else {
+                isOwner = false;
+            }
+            resolve(currentSessionId);
+        }, { onlyOnce: true }, (error) => {
+            reject(error);
+        });
+    });
 }
 
 /**
@@ -75,6 +122,20 @@ export function getCurrentSessionId() {
  */
 export function getCurrentSessionRef() {
     return currentSessionRef;
+}
+
+/**
+ * Vérifie si l'utilisateur actuel est le propriétaire de la session
+ */
+export function isSessionOwner() {
+    return isOwner;
+}
+
+/**
+ * Récupère l'ID de l'utilisateur actuel
+ */
+export function getCurrentUserId() {
+    return currentUserId;
 }
 
 /**
@@ -93,11 +154,15 @@ export function setupRealtimeListener(type, callback) {
 }
 
 /**
- * Efface toutes les données de la session courante
+ * Efface toutes les données de la session courante (OP uniquement)
  */
 export async function clearSession() {
     if (!currentSessionRef) {
         throw new Error('Aucune session active');
+    }
+
+    if (!isOwner) {
+        throw new Error('Seul l\'organisateur peut effacer la session');
     }
 
     const confirmMessage = '⚠️ Supprimer toutes les données de cette session ?';
@@ -106,7 +171,17 @@ export async function clearSession() {
     }
 
     try {
-        const emptyData = { positive: {}, negative: {}, action: {} };
+        const emptyData = {
+            owner: currentUserId,
+            positive: {},
+            negative: {},
+            action: {},
+            timer: {
+                timeRemaining: 0,
+                isRunning: false,
+                lastUpdate: Date.now()
+            }
+        };
         await set(currentSessionRef, emptyData);
         return true;
     } catch (error) {
@@ -135,6 +210,51 @@ export function exportSession(callback) {
 }
 
 /**
+ * Met à jour l'état du timer dans Firebase (OP uniquement)
+ */
+export async function updateTimerState(timeRemaining, isRunning) {
+    if (!currentSessionRef) {
+        throw new Error('Aucune session active');
+    }
+
+    if (!isOwner) {
+        throw new Error('Seul l\'organisateur peut contrôler le timer');
+    }
+
+    const timerRef = ref(db, `sessions/${currentSessionId}/timer`);
+    try {
+        await update(timerRef, {
+            timeRemaining,
+            isRunning,
+            lastUpdate: Date.now()
+        });
+    } catch (error) {
+        console.error('Erreur lors de la mise à jour du timer:', error);
+        throw error;
+    }
+}
+
+/**
+ * Configure un listener pour le timer
+ */
+export function watchTimer(callback) {
+    if (!currentSessionRef) {
+        throw new Error('Aucune session active');
+    }
+
+    const timerRef = ref(db, `sessions/${currentSessionId}/timer`);
+    const unsubscribe = onValue(timerRef, (snapshot) => {
+        const timerData = snapshot.val();
+        if (timerData) {
+            callback(timerData);
+        }
+    });
+
+    listeners.push({ type: 'timer', unsubscribe });
+    return unsubscribe;
+}
+
+/**
  * Nettoie tous les listeners
  */
 export function cleanup() {
@@ -142,4 +262,6 @@ export function cleanup() {
     listeners = [];
     currentSessionRef = null;
     currentSessionId = null;
+    currentUserId = null;
+    isOwner = false;
 }

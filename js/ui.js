@@ -59,14 +59,19 @@ export function showSuccess(message) {
 export function renderCards(container, cards, type, handlers) {
     if (!container) return;
 
+    // Les actions n'ont pas de système de vote
+    const showVotes = type !== 'action';
+
     container.innerHTML = cards.map(card => `
         <div class="card">
             <div class="card-content">${escapeHtml(card.content)}</div>
             <div class="card-footer">
                 <span class="card-author">${escapeHtml(card.author)}</span>
                 <div class="card-actions">
-                    <div class="votes">👍 ${card.votes || 0}</div>
-                    <button class="card-btn" data-action="vote" data-type="${type}" data-key="${card.key}" data-votes="${card.votes || 0}">⬆️</button>
+                    ${showVotes ? `
+                        <div class="votes">👍 ${card.votes || 0}</div>
+                        <button class="card-btn" data-action="vote" data-type="${type}" data-key="${card.key}" data-votes="${card.votes || 0}">⬆️</button>
+                    ` : ''}
                     <button class="card-btn" data-action="delete" data-type="${type}" data-key="${card.key}">🗑️</button>
                 </div>
             </div>
@@ -75,15 +80,17 @@ export function renderCards(container, cards, type, handlers) {
 
     // Attacher les événements
     if (handlers) {
-        container.querySelectorAll('[data-action="vote"]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                handlers.onVote(
-                    btn.dataset.type,
-                    btn.dataset.key,
-                    parseInt(btn.dataset.votes)
-                );
+        if (showVotes) {
+            container.querySelectorAll('[data-action="vote"]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    handlers.onVote(
+                        btn.dataset.type,
+                        btn.dataset.key,
+                        parseInt(btn.dataset.votes)
+                    );
+                });
             });
-        });
+        }
 
         container.querySelectorAll('[data-action="delete"]').forEach(btn => {
             btn.addEventListener('click', () => {

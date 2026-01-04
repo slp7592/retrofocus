@@ -1,5 +1,5 @@
 import { ref, set, push, remove, update, onValue } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
-import { getCurrentSessionId } from './session.js';
+import { getCurrentSessionId, isSessionOwner } from './session.js';
 
 /**
  * Module de gestion des cartes de rétrospective
@@ -27,11 +27,17 @@ function getUserName() {
 
 /**
  * Ajoute une nouvelle carte
+ * Pour les actions : OP uniquement
  */
 export async function addCard(type, content) {
     const sessionId = getCurrentSessionId();
     if (!sessionId) {
         throw new Error('Aucune session active');
+    }
+
+    // Vérifier les permissions pour les actions
+    if (type === 'action' && !isSessionOwner()) {
+        throw new Error('Seul l\'organisateur peut ajouter des actions');
     }
 
     if (!content || content.trim().length === 0) {
@@ -46,7 +52,7 @@ export async function addCard(type, content) {
         id: Date.now() + Math.random(),
         content: content.trim().substring(0, 200),
         author: getUserName(),
-        votes: 0,
+        votes: type === 'action' ? undefined : 0, // Pas de votes pour les actions
         timestamp: Date.now()
     };
 
@@ -64,11 +70,17 @@ export async function addCard(type, content) {
 
 /**
  * Supprime une carte
+ * Pour les actions : OP uniquement
  */
 export async function deleteCard(type, key) {
     const sessionId = getCurrentSessionId();
     if (!sessionId) {
         throw new Error('Aucune session active');
+    }
+
+    // Vérifier les permissions pour les actions
+    if (type === 'action' && !isSessionOwner()) {
+        throw new Error('Seul l\'organisateur peut supprimer des actions');
     }
 
     if (!confirm('Supprimer cette carte ?')) {
@@ -88,11 +100,17 @@ export async function deleteCard(type, key) {
 
 /**
  * Ajoute un vote à une carte
+ * Les actions ne peuvent pas être votées
  */
 export async function voteCard(type, key, currentVotes = 0) {
     const sessionId = getCurrentSessionId();
     if (!sessionId) {
         throw new Error('Aucune session active');
+    }
+
+    // Empêcher le vote sur les actions
+    if (type === 'action') {
+        throw new Error('Les actions ne peuvent pas être votées');
     }
 
     const cardRef = ref(db, `sessions/${sessionId}/${type}/${key}`);

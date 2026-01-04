@@ -37,7 +37,7 @@ async function initializeApp() {
         // Initialiser les modules
         Session.initialize(db);
         Cards.initialize(db);
-        Timer.initialize(document.getElementById('timerDisplay'));
+        Timer.initialize(document.getElementById('timerDisplay'), handleTimerUpdate);
 
         // Afficher l'interface principale
         UI.toggleElement(document.getElementById('setupModal'), false);
@@ -105,7 +105,7 @@ window.initializeFirebase = function() {
 
     Session.initialize(db);
     Cards.initialize(db);
-    Timer.initialize(document.getElementById('timerDisplay'));
+    Timer.initialize(document.getElementById('timerDisplay'), handleTimerUpdate);
 
     // Afficher le lien de partage dans le modal
     showShareLink(config);
@@ -215,6 +215,8 @@ window.createNewSession = async function() {
     try {
         const sessionId = await Session.createNewSession();
         setupCardsListeners();
+        setupTimerListener();
+        updateUIPermissions();
         UI.updateSessionDisplay(sessionId);
         UI.showSuccess('Session créée : ' + sessionId);
     } catch (error) {
@@ -226,7 +228,7 @@ window.createNewSession = async function() {
  * Gère la jonction à une session
  */
 window.joinSession = handleJoinSession;
-function handleJoinSession() {
+async function handleJoinSession() {
     try {
         const sessionId = UI.getInputValue('sessionIdInput');
         if (!sessionId) {
@@ -234,8 +236,10 @@ function handleJoinSession() {
             return;
         }
 
-        Session.joinSession(sessionId);
+        await Session.joinSession(sessionId);
         setupCardsListeners();
+        setupTimerListener();
+        updateUIPermissions();
         UI.updateSessionDisplay(sessionId);
         UI.showSuccess('Session rejointe : ' + sessionId);
     } catch (error) {
@@ -329,17 +333,84 @@ window.exportData = function() {
 };
 
 /**
- * Gestion du minuteur
+ * Met à jour l'UI selon les permissions de l'utilisateur
+ */
+function updateUIPermissions() {
+    const isOwner = Session.isSessionOwner();
+
+    // Boutons et éléments réservés à l'OP
+    const ownerElements = [
+        document.getElementById('clearAllBtn'),
+        document.querySelector('.export-section'),
+        document.querySelector('.timer-controls')
+    ];
+
+    ownerElements.forEach(el => {
+        if (el) {
+            el.style.display = isOwner ? '' : 'none';
+        }
+    });
+
+    // Input et bouton pour les actions
+    const actionInput = document.getElementById('inputAction');
+    const actionAddBtn = actionInput?.nextElementSibling;
+
+    if (actionInput && actionAddBtn) {
+        actionInput.disabled = !isOwner;
+        actionInput.placeholder = isOwner
+            ? 'Quelle action mettre en place ?'
+            : 'Seul l\'organisateur peut ajouter des actions';
+        actionAddBtn.style.display = isOwner ? '' : 'none';
+    }
+}
+
+/**
+ * Configure le listener pour synchroniser le timer
+ */
+function setupTimerListener() {
+    Session.watchTimer((timerData) => {
+        // Si on n'est pas l'OP, synchroniser avec Firebase
+        if (!Session.isSessionOwner()) {
+            Timer.syncFromFirebase(timerData);
+        }
+    });
+}
+
+/**
+ * Callback pour mettre à jour le timer dans Firebase (OP uniquement)
+ */
+function handleTimerUpdate(timeRemaining, isRunning) {
+    if (Session.isSessionOwner()) {
+        Session.updateTimerState(timeRemaining, isRunning).catch(error => {
+            console.error('Erreur de mise à jour du timer:', error);
+        });
+    }
+}
+
+/**
+ * Gestion du minuteur (OP uniquement)
  */
 window.startTimer = function(minutes) {
+    if (!Session.isSessionOwner()) {
+        UI.showError('Seul l\'organisateur peut contrôler le timer');
+        return;
+    }
     Timer.start(minutes);
 };
 
 window.pauseTimer = function() {
+    if (!Session.isSessionOwner()) {
+        UI.showError('Seul l\'organisateur peut contrôler le timer');
+        return;
+    }
     Timer.pause();
 };
 
 window.resetTimer = function() {
+    if (!Session.isSessionOwner()) {
+        UI.showError('Seul l\'organisateur peut contrôler le timer');
+        return;
+    }
     Timer.stop();
 };
 

@@ -6,11 +6,12 @@ Application web collaborative pour rétrospectives agiles en temps réel, héber
 
 - 📝 **Trois colonnes** : Points positifs, Points à améliorer, Actions
 - 👥 **Collaboration temps réel** : Plusieurs utilisateurs simultanés
-- 👍 **Système de votes** : Priorisez les sujets importants
-- ⏱️ **Minuteur intégré** : Timebox vos rétrospectives
-- 📥 **Export JSON** : Sauvegardez vos rétrospectives
+- 👑 **Système de rôles** : Organisateur (OP) avec droits étendus
+- 👍 **Système de votes** : Priorisez les sujets importants (sauf actions)
+- ⏱️ **Minuteur synchronisé** : Timer temps réel visible par tous, contrôlable par l'OP
+- 📥 **Export JSON** : Sauvegardez vos rétrospectives (OP uniquement)
 - 🔗 **Partage facile** : Un seul lien pour toute l'équipe
-- 🔒 **Sécurisé** : Content Security Policy configuré
+- 🔒 **Sécurisé** : Content Security Policy configuré + permissions
 - 💯 **100% Gratuit** : GitHub Pages + Firebase gratuit
 
 ## 🚀 Démarrage rapide
@@ -73,33 +74,64 @@ Dans Firebase Console → Realtime Database → Règles :
 
 ## 📖 Utilisation
 
-### Créer une session
+### 👑 Rôles et Permissions
+
+**Organisateur (OP)** - Celui qui crée la session :
+- ✅ Toutes les actions des participants
+- ✅ Ajouter/supprimer des **actions**
+- ✅ Contrôler le **minuteur** (démarrer/pause/arrêter)
+- ✅ **Effacer** toutes les données
+- ✅ **Exporter** la rétrospective
+
+**Participants** - Ceux qui rejoignent la session :
+- ✅ Ajouter/supprimer des points positifs et négatifs
+- ✅ Voter sur les points positifs et négatifs
+- ✅ Voir les actions et le minuteur
+- ❌ Pas d'accès aux actions, minuteur, export ou suppression
+
+### Créer une session (Organisateur)
 
 1. Entrez votre nom
-2. Cliquez sur "Nouvelle session"
-3. Partagez l'ID de session avec votre équipe
+2. Cliquez sur "**Nouvelle session**"
+3. Vous devenez automatiquement l'**organisateur** (OP)
+4. Partagez l'ID de session avec votre équipe
 
-### Rejoindre une session
+### Rejoindre une session (Participant)
 
 1. Entrez votre nom
 2. Saisissez l'ID de session partagé
-3. Cliquez sur "Rejoindre"
+3. Cliquez sur "**Rejoindre**"
+4. Vous rejoignez en tant que **participant**
 
 ### Ajouter des cartes
 
+**Points positifs et négatifs** (tous) :
 1. Tapez votre commentaire (max 200 caractères)
 2. Appuyez sur Entrée ou cliquez sur "+"
 3. Vos coéquipiers verront la carte en temps réel
 
+**Actions** (OP uniquement) :
+1. L'input est **désactivé** pour les participants
+2. Seul l'organisateur peut ajouter des actions
+3. Les actions définissent les prochaines étapes
+
 ### Voter
 
-- Cliquez sur ⬆️ pour voter
+- Cliquez sur ⬆️ pour voter sur les **points positifs et négatifs**
 - Les cartes sont triées par nombre de votes
+- ⚠️ Les **actions ne peuvent pas être votées**
 
-### Exporter
+### Minuteur synchronisé
+
+- **OP** : Contrôle complet (démarrer, pause, arrêter)
+- **Participants** : Voient le timer en temps réel
+- Le décompte est synchronisé entre tous les participants
+
+### Exporter (OP uniquement)
 
 - Cliquez sur "Télécharger (JSON)"
 - Sauvegardez la rétrospective pour vos archives
+- ⚠️ Bouton visible uniquement pour l'organisateur
 
 ## 🏗️ Architecture
 
