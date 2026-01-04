@@ -107,12 +107,7 @@ window.initializeFirebase = function() {
     Cards.initialize(db);
     Timer.initialize(document.getElementById('timerDisplay'));
 
-    UI.toggleElement(document.getElementById('setupModal'), false);
-    UI.toggleElement(document.getElementById('mainApp'), true);
-
-    setupEventListeners();
-
-    // Afficher le lien de partage
+    // Afficher le lien de partage dans le modal
     showShareLink(config);
 };
 
@@ -130,6 +125,9 @@ function showShareLink(config) {
             ${shareLink}
         </div>
         <p style="margin-top: 5px; font-size: 12px; color: #2d5016;">📋 Cliquez sur le lien pour le copier</p>
+        <button class="btn btn-primary" onclick="closeConfigAndStart()" style="width: 100%; margin-top: 15px;">
+            Continuer vers l'application →
+        </button>
     `;
 
     const setupContent = document.querySelector('.setup-content');
@@ -152,6 +150,15 @@ window.copyShareLink = async function(element) {
     } else {
         UI.showError('Impossible de copier le lien');
     }
+};
+
+/**
+ * Ferme le modal de configuration et démarre l'application
+ */
+window.closeConfigAndStart = function() {
+    UI.toggleElement(document.getElementById('setupModal'), false);
+    UI.toggleElement(document.getElementById('mainApp'), true);
+    setupEventListeners();
 };
 
 /**
@@ -180,8 +187,8 @@ function setupEventListeners() {
         });
     }
 
-    // Configurer les listeners de cartes
-    setupCardsListeners();
+    // Ne pas configurer les listeners de cartes ici
+    // Ils seront configurés uniquement lors de la création/jonction d'une session
 }
 
 /**
