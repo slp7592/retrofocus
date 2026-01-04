@@ -459,12 +459,27 @@
                 ⚠️ Après initialisation, ajoutez ces règles de sécurité dans Firebase (onglet Règles) :
             </div>
 
-            <textarea class="config-input" readonly style="min-height: 180px;">{
+            <textarea class="config-input" readonly style="min-height: 350px;">{
   "rules": {
     "sessions": {
       "$sessionId": {
         ".read": true,
-        ".write": true
+        ".write": true,
+        "positive": {
+          "$cardId": {
+            ".validate": "newData.hasChildren(['id', 'content', 'author', 'votes', 'timestamp']) && newData.child('content').val().length <= 200 && newData.child('author').val().length <= 30"
+          }
+        },
+        "negative": {
+          "$cardId": {
+            ".validate": "newData.hasChildren(['id', 'content', 'author', 'votes', 'timestamp']) && newData.child('content').val().length <= 200 && newData.child('author').val().length <= 30"
+          }
+        },
+        "action": {
+          "$cardId": {
+            ".validate": "newData.hasChildren(['id', 'content', 'author', 'votes', 'timestamp']) && newData.child('content').val().length <= 200 && newData.child('author').val().length <= 30"
+          }
+        }
       }
     }
   }
