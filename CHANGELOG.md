@@ -1,5 +1,42 @@
 # Changelog
 
+## Version 3.1.0 - 2026-01-04
+
+### 🎉 Améliorations UX et quota de votes
+
+#### ✨ Nouvelles fonctionnalités
+
+- **Limitation des votes à 3 par utilisateur**
+  - Chaque participant dispose de 3 votes maximum
+  - Compteur de votes restants affiché dans le bandeau supérieur
+  - Message d'erreur si quota atteint
+  - Compteur mis à jour en temps réel après chaque vote
+
+- **Suppression basée sur l'auteur**
+  - Les participants ne peuvent supprimer que leurs propres cartes
+  - L'OP peut supprimer toutes les cartes de tous les utilisateurs
+  - Validation côté client avec messages d'erreur explicites
+  - Amélioration de la sécurité et de la collaboration
+
+- **Interface utilisateur améliorée**
+  - Section de session masquée automatiquement après avoir créé/rejoint
+  - ID de session affiché dans le bandeau supérieur (entre titre et nom d'utilisateur)
+  - Meilleure visibilité de l'ID de session actif
+  - Interface plus épurée pendant l'utilisation
+
+- **Minuteur simplifié**
+  - Bouton "Pause" supprimé (uniquement Démarrer/Stop)
+  - Interface plus simple et intuitive
+  - Trois presets : 5, 7 et 10 minutes
+
+#### 🔧 Améliorations techniques
+
+- Fonction `updateVoteDisplay()` pour mise à jour du compteur
+- Fonction `updateSessionUI()` pour gérer l'affichage après connexion
+- Passage de l'auteur de carte dans les gestionnaires d'événements
+- Validation des permissions de suppression côté client
+- Meilleure séparation des préoccupations dans le code
+
 ## Version 3.0.0 - 2026-01-04
 
 ### 🎉 Système de permissions et timer synchronisé

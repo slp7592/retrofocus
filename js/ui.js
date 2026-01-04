@@ -72,7 +72,7 @@ export function renderCards(container, cards, type, handlers) {
                         <div class="votes">👍 ${card.votes || 0}</div>
                         <button class="card-btn" data-action="vote" data-type="${type}" data-key="${card.key}" data-votes="${card.votes || 0}">⬆️</button>
                     ` : ''}
-                    <button class="card-btn" data-action="delete" data-type="${type}" data-key="${card.key}">🗑️</button>
+                    <button class="card-btn" data-action="delete" data-type="${type}" data-key="${card.key}" data-author="${escapeHtml(card.author)}">🗑️</button>
                 </div>
             </div>
         </div>
@@ -94,7 +94,7 @@ export function renderCards(container, cards, type, handlers) {
 
         container.querySelectorAll('[data-action="delete"]').forEach(btn => {
             btn.addEventListener('click', () => {
-                handlers.onDelete(btn.dataset.type, btn.dataset.key);
+                handlers.onDelete(btn.dataset.type, btn.dataset.key, btn.dataset.author);
             });
         });
     }

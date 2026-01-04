@@ -79,15 +79,17 @@ Dans Firebase Console → Realtime Database → Règles :
 **Organisateur (OP)** - Celui qui crée la session :
 - ✅ Toutes les actions des participants
 - ✅ Ajouter/supprimer des **actions**
-- ✅ Contrôler le **minuteur** (démarrer/pause/arrêter)
+- ✅ Supprimer **toutes les cartes** (y compris celles des autres)
+- ✅ Contrôler le **minuteur** (démarrer/arrêter)
 - ✅ **Effacer** toutes les données
 - ✅ **Exporter** la rétrospective
 
 **Participants** - Ceux qui rejoignent la session :
-- ✅ Ajouter/supprimer des points positifs et négatifs
-- ✅ Voter sur les points positifs et négatifs
+- ✅ Ajouter des points positifs et négatifs
+- ✅ Supprimer **uniquement leurs propres cartes**
+- ✅ Voter sur les points positifs et négatifs (**3 votes max**)
 - ✅ Voir les actions et le minuteur
-- ❌ Pas d'accès aux actions, minuteur, export ou suppression
+- ❌ Pas d'accès aux actions, minuteur, export ou suppression générale
 
 ### Créer une session (Organisateur)
 
@@ -102,6 +104,8 @@ Dans Firebase Console → Realtime Database → Règles :
 2. Saisissez l'ID de session partagé
 3. Cliquez sur "**Rejoindre**"
 4. Vous rejoignez en tant que **participant**
+5. La section de session se masque automatiquement
+6. L'ID de session s'affiche dans le bandeau supérieur
 
 ### Ajouter des cartes
 
@@ -118,14 +122,23 @@ Dans Firebase Console → Realtime Database → Règles :
 ### Voter
 
 - Cliquez sur ⬆️ pour voter sur les **points positifs et négatifs**
+- Chaque utilisateur dispose de **3 votes maximum**
+- Le compteur de votes restants s'affiche dans le bandeau supérieur
 - Les cartes sont triées par nombre de votes
 - ⚠️ Les **actions ne peuvent pas être votées**
 
+### Supprimer des cartes
+
+- **Participants** : Peuvent supprimer uniquement leurs propres cartes (points positifs/négatifs)
+- **Organisateur (OP)** : Peut supprimer toutes les cartes de tous les utilisateurs
+- Seul l'OP peut supprimer des actions
+
 ### Minuteur synchronisé
 
-- **OP** : Contrôle complet (démarrer, pause, arrêter)
+- **OP** : Contrôle complet (démarrer/arrêter)
 - **Participants** : Voient le timer en temps réel
 - Le décompte est synchronisé entre tous les participants
+- Boutons du timer masqués pour les participants
 
 ### Exporter (OP uniquement)
 

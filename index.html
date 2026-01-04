@@ -96,17 +96,23 @@
     <div class="container" id="mainApp" style="display: none;">
         <header>
             <h1>🔄 Rétrospective Sprint</h1>
+            <div id="headerSessionId" style="display: none; color: #667eea; font-weight: 600; font-size: 14px;">
+                Session: <span id="headerSessionIdText"></span>
+            </div>
             <div class="session-info">
                 <div class="user-name">
                     <span>👤</span>
                     <input type="text" id="userName" placeholder="Votre nom" maxlength="30">
+                </div>
+                <div id="votesRemaining" style="display: none; color: #667eea; font-weight: 600; margin-right: 15px;">
+                    👍 Votes restants: <span id="votesCount">3</span>
                 </div>
                 <button id="clearAllBtn" class="btn btn-danger" onclick="clearAll()">🗑️ Tout effacer</button>
             </div>
         </header>
 
         <div class="session-section">
-            <h3>🔗 Session de collaboration</h3>
+            <h3>🔗 Session</h3>
             <div class="session-controls">
                 <input type="text" id="sessionIdInput" placeholder="Entrez un ID de session" style="flex: 1; min-width: 200px;">
                 <button class="btn btn-primary" onclick="joinSession()">Rejoindre</button>
@@ -163,13 +169,12 @@
         </div>
 
         <div class="timer">
-            <h3>⏱️ Minuteur de rétrospective</h3>
-            <div class="timer-display" id="timerDisplay">15:00</div>
+            <h3>⏱️ Minuteur</h3>
+            <div class="timer-display" id="timerDisplay">5:00</div>
             <div class="timer-controls">
                 <button class="btn btn-primary" onclick="startTimer(5)">5 min</button>
-                <button class="btn btn-primary" onclick="startTimer(15)">15 min</button>
-                <button class="btn btn-primary" onclick="startTimer(30)">30 min</button>
-                <button class="btn btn-secondary" onclick="pauseTimer()">⏸️ Pause</button>
+                <button class="btn btn-primary" onclick="startTimer(7)">7 min</button>
+                <button class="btn btn-primary" onclick="startTimer(10)">10 min</button>
                 <button class="btn btn-danger" onclick="resetTimer()">⏹️ Stop</button>
             </div>
         </div>

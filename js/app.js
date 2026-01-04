@@ -217,7 +217,7 @@ window.createNewSession = async function() {
         setupCardsListeners();
         setupTimerListener();
         updateUIPermissions();
-        UI.updateSessionDisplay(sessionId);
+        updateSessionUI(sessionId);
         UI.showSuccess('Session créée : ' + sessionId);
     } catch (error) {
         UI.showError(error.message);
@@ -240,7 +240,7 @@ async function handleJoinSession() {
         setupCardsListeners();
         setupTimerListener();
         updateUIPermissions();
-        UI.updateSessionDisplay(sessionId);
+        updateSessionUI(sessionId);
         UI.showSuccess('Session rejointe : ' + sessionId);
     } catch (error) {
         UI.showError(error.message);
@@ -272,6 +272,7 @@ window.voteCard = handleVoteCard;
 async function handleVoteCard(type, key, currentVotes) {
     try {
         await Cards.voteCard(type, key, currentVotes);
+        updateVoteDisplay();
     } catch (error) {
         UI.showError(error.message);
     }
@@ -281,9 +282,9 @@ async function handleVoteCard(type, key, currentVotes) {
  * Gère la suppression d'une carte
  */
 window.deleteCard = handleDeleteCard;
-async function handleDeleteCard(type, key) {
+async function handleDeleteCard(type, key, cardAuthor) {
     try {
-        await Cards.deleteCard(type, key);
+        await Cards.deleteCard(type, key, cardAuthor);
     } catch (error) {
         UI.showError(error.message);
     }
@@ -362,6 +363,42 @@ function updateUIPermissions() {
             : 'Seul l\'organisateur peut ajouter des actions';
         actionAddBtn.style.display = isOwner ? '' : 'none';
     }
+}
+
+/**
+ * Met à jour l'affichage des votes restants
+ */
+function updateVoteDisplay() {
+    const votesRemainingDiv = document.getElementById('votesRemaining');
+    const votesCountSpan = document.getElementById('votesCount');
+
+    if (votesRemainingDiv && votesCountSpan) {
+        votesRemainingDiv.style.display = 'block';
+        votesCountSpan.textContent = Session.getVotesRemaining();
+    }
+}
+
+/**
+ * Met à jour l'UI après avoir rejoint/créé une session
+ */
+function updateSessionUI(sessionId) {
+    // Masquer la section de session
+    const sessionSection = document.querySelector('.session-section');
+    if (sessionSection) {
+        sessionSection.style.display = 'none';
+    }
+
+    // Afficher l'ID de session dans le header
+    const headerSessionId = document.getElementById('headerSessionId');
+    const headerSessionIdText = document.getElementById('headerSessionIdText');
+
+    if (headerSessionId && headerSessionIdText) {
+        headerSessionId.style.display = 'block';
+        headerSessionIdText.textContent = sessionId;
+    }
+
+    // Afficher le compteur de votes
+    updateVoteDisplay();
 }
 
 /**

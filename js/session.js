@@ -10,6 +10,8 @@ let currentSessionId = null;
 let currentUserId = null;
 let isOwner = false;
 let listeners = [];
+let votesUsed = 0;
+const MAX_VOTES = 3;
 
 /**
  * Initialise le module avec la référence à la base de données
@@ -139,6 +141,34 @@ export function getCurrentUserId() {
 }
 
 /**
+ * Récupère le nombre de votes utilisés
+ */
+export function getVotesUsed() {
+    return votesUsed;
+}
+
+/**
+ * Récupère le nombre de votes restants
+ */
+export function getVotesRemaining() {
+    return MAX_VOTES - votesUsed;
+}
+
+/**
+ * Incrémente le compteur de votes
+ */
+export function incrementVotesUsed() {
+    votesUsed++;
+}
+
+/**
+ * Vérifie si l'utilisateur peut encore voter
+ */
+export function canVote() {
+    return votesUsed < MAX_VOTES;
+}
+
+/**
  * Configure un listener temps réel pour un type de carte
  */
 export function setupRealtimeListener(type, callback) {
@@ -264,4 +294,5 @@ export function cleanup() {
     currentSessionId = null;
     currentUserId = null;
     isOwner = false;
+    votesUsed = 0;
 }

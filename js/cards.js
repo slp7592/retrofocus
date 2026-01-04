@@ -1,5 +1,5 @@
 import { ref, set, push, remove, update, onValue } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
-import { getCurrentSessionId, isSessionOwner } from './session.js';
+import { getCurrentSessionId, isSessionOwner, canVote, incrementVotesUsed } from './session.js';
 
 /**
  * Module de gestion des cartes de rétrospective
@@ -75,16 +75,25 @@ export async function addCard(type, content) {
 /**
  * Supprime une carte
  * Pour les actions : OP uniquement
+ * Pour les autres : auteur ou OP uniquement
  */
-export async function deleteCard(type, key) {
+export async function deleteCard(type, key, cardAuthor) {
     const sessionId = getCurrentSessionId();
     if (!sessionId) {
         throw new Error('Aucune session active');
     }
 
+    const isOwner = isSessionOwner();
+    const currentUser = getUserName();
+
     // Vérifier les permissions pour les actions
-    if (type === 'action' && !isSessionOwner()) {
+    if (type === 'action' && !isOwner) {
         throw new Error('Seul l\'organisateur peut supprimer des actions');
+    }
+
+    // Pour les points positifs/négatifs : vérifier l'auteur sauf si OP
+    if (type !== 'action' && !isOwner && cardAuthor !== currentUser) {
+        throw new Error('Vous ne pouvez supprimer que vos propres cartes');
     }
 
     if (!confirm('Supprimer cette carte ?')) {
@@ -117,10 +126,16 @@ export async function voteCard(type, key, currentVotes = 0) {
         throw new Error('Les actions ne peuvent pas être votées');
     }
 
+    // Vérifier la limite de votes
+    if (!canVote()) {
+        throw new Error('Vous avez utilisé vos 3 votes');
+    }
+
     const cardRef = ref(db, `sessions/${sessionId}/${type}/${key}`);
 
     try {
         await update(cardRef, { votes: currentVotes + 1 });
+        incrementVotesUsed();
         return currentVotes + 1;
     } catch (error) {
         console.error('Erreur lors du vote:', error);

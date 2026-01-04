@@ -21,10 +21,14 @@ La version 3.0 introduit un **système de permissions** avec deux rôles distinc
 **Si vous créez une session** :
 - Vous êtes automatiquement l'**Organisateur**
 - Vous avez tous les droits (actions, timer, export, suppression)
+- Vous pouvez supprimer toutes les cartes de tous les utilisateurs
+- Vous disposez de 3 votes comme tout le monde
 
 **Si vous rejoignez une session** :
 - Vous êtes un **Participant**
-- Vous pouvez ajouter des points positifs/négatifs et voter
+- Vous pouvez ajouter des points positifs/négatifs
+- Vous pouvez supprimer uniquement vos propres cartes
+- Vous disposez de **3 votes maximum** pour prioriser les sujets
 - Vous ne pouvez PAS ajouter d'actions ni contrôler le timer
 
 ### 3. Sessions existantes
@@ -38,9 +42,10 @@ Les sessions créées avec les versions antérieures n'auront pas de propriétai
 ### Timer synchronisé
 
 Le minuteur est maintenant synchronisé en temps réel entre tous les participants :
-- L'OP démarre le timer
+- L'OP démarre/arrête le timer (bouton Pause supprimé en v3.1)
 - Tous les participants voient le même décompte
 - Pas de désynchronisation, même avec de la latence réseau
+- Trois presets disponibles : 5, 7 et 10 minutes
 
 ### Actions réservées à l'OP
 
@@ -49,12 +54,30 @@ Les actions sont maintenant un espace réservé à l'organisateur :
 - Les participants voient les actions mais ne peuvent pas les modifier
 - Pas de votes sur les actions (simplifie l'interface)
 
+### Quota de votes (v3.1)
+
+Chaque utilisateur dispose d'un quota limité de votes :
+- **3 votes maximum** par utilisateur
+- Compteur affiché dans le bandeau supérieur
+- Mise à jour en temps réel après chaque vote
+- Message d'erreur si quota atteint
+
+### Suppression basée sur l'auteur (v3.1)
+
+Nouvelles règles de suppression pour améliorer la collaboration :
+- Les **participants** ne peuvent supprimer que leurs propres cartes
+- L'**OP** peut supprimer toutes les cartes de tous les utilisateurs
+- Messages d'erreur clairs si tentative non autorisée
+
 ### UI adaptative
 
 L'interface s'adapte automatiquement selon votre rôle :
 - Boutons masqués si vous n'avez pas la permission
 - Messages d'erreur clairs si vous essayez une action non autorisée
 - Input des actions désactivé pour les participants
+- Section de session masquée après connexion (v3.1)
+- ID de session affiché dans le bandeau supérieur (v3.1)
+- Compteur de votes visible pour tous (v3.1)
 
 ## ❓ FAQ
 
@@ -63,6 +86,7 @@ L'interface s'adapte automatiquement selon votre rôle :
 - Vous voyez les boutons "Effacer", "Exporter" et les contrôles du timer
 - L'input des actions est actif
 - Vous pouvez ajouter des actions
+- Vous pouvez supprimer toutes les cartes (pas seulement les vôtres)
 
 ### Je veux donner les droits OP à quelqu'un d'autre
 
@@ -102,6 +126,24 @@ Actuellement, si quelqu'un a l'ID de session, il peut y accéder.
 **Solution** :
 - Si vous devez être l'organisateur, créez une nouvelle session
 - Sinon, demandez à l'organisateur d'ajouter les actions pour vous
+
+### Je ne peux plus voter
+
+**Cause** : Vous avez utilisé vos 3 votes.
+
+**Solution** :
+- Chaque utilisateur dispose de 3 votes maximum
+- C'est une limite volontaire pour encourager la priorisation
+- Créez une nouvelle session pour réinitialiser vos votes
+
+### Je ne peux pas supprimer une carte
+
+**Cause** : Vous essayez de supprimer une carte qui n'a pas été créée par vous.
+
+**Solution** :
+- En tant que participant, vous ne pouvez supprimer que vos propres cartes
+- Demandez à l'organisateur de supprimer la carte si nécessaire
+- Ou demandez à l'auteur de la carte de la supprimer
 
 ### Les boutons sont cachés alors que j'ai créé la session
 
