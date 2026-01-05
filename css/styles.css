@@ -520,6 +520,25 @@ input[type="text"]:focus {
     background: #cbd5e0;
 }
 
+@keyframes cardMoved {
+    0% {
+        background: #f7fafc;
+    }
+    50% {
+        background: #fef5e7;
+        transform: scale(1.02);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+    100% {
+        background: #f7fafc;
+        transform: scale(1);
+    }
+}
+
+.card-moved {
+    animation: cardMoved 0.6s ease-out;
+}
+
 @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }

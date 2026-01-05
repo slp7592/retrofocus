@@ -204,6 +204,22 @@ function setupEventListeners() {
 }
 
 /**
+ * Détermine si l'utilisateur peut supprimer une carte
+ */
+function canDeleteCard(card, type) {
+    const currentUserName = Session.getCurrentUserName();
+    const isOwner = Session.isSessionOwner();
+
+    // Pour les actions : seul l'OP peut supprimer
+    if (type === 'action') {
+        return isOwner;
+    }
+
+    // Pour les points positifs/négatifs : l'auteur ou l'OP peuvent supprimer
+    return card.author === currentUserName || isOwner;
+}
+
+/**
  * Configure les listeners pour les cartes
  */
 function setupCardsListeners() {
@@ -214,7 +230,8 @@ function setupCardsListeners() {
 
             UI.renderCards(container, cards, type, {
                 onVote: handleVoteCard,
-                onDelete: handleDeleteCard
+                onDelete: handleDeleteCard,
+                canDelete: canDeleteCard
             });
         });
     });

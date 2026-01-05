@@ -96,6 +96,9 @@ export function showConfirm(message) {
     ]);
 }
 
+// Stockage de l'ordre précédent des cartes pour détecter les mouvements
+const previousCardsOrder = {};
+
 /**
  * Rend les cartes dans un conteneur
  */
@@ -105,8 +108,29 @@ export function renderCards(container, cards, type, handlers) {
     // Les actions n'ont pas de système de vote
     const showVotes = type !== 'action';
 
-    container.innerHTML = cards.map(card => `
-        <div class="card">
+    // Détecter les cartes qui ont changé de position
+    const previousOrder = previousCardsOrder[type] || [];
+    const movedCards = new Set();
+
+    cards.forEach((card, newIndex) => {
+        const oldIndex = previousOrder.indexOf(card.key);
+        if (oldIndex !== -1 && oldIndex !== newIndex) {
+            movedCards.add(card.key);
+        }
+    });
+
+    // Stocker le nouvel ordre
+    previousCardsOrder[type] = cards.map(c => c.key);
+
+    container.innerHTML = cards.map(card => {
+        // Déterminer si l'utilisateur peut supprimer cette carte
+        const canDelete = handlers.canDelete ? handlers.canDelete(card, type) : true;
+
+        // Ajouter la classe d'animation si la carte a bougé
+        const cardClass = movedCards.has(card.key) ? 'card card-moved' : 'card';
+
+        return `
+        <div class="${cardClass}" data-card-key="${card.key}">
             <div class="card-content">${escapeHtml(card.content)}</div>
             <div class="card-footer">
                 <span class="card-author">${escapeHtml(card.author)}</span>
@@ -115,11 +139,19 @@ export function renderCards(container, cards, type, handlers) {
                         <div class="votes">👍 ${card.votes || 0}</div>
                         <button class="card-btn" data-action="vote" data-type="${type}" data-key="${card.key}" data-votes="${card.votes || 0}">⬆️</button>
                     ` : ''}
-                    <button class="card-btn" data-action="delete" data-type="${type}" data-key="${card.key}" data-author="${escapeHtml(card.author)}">🗑️</button>
+                    ${canDelete ? `<button class="card-btn" data-action="delete" data-type="${type}" data-key="${card.key}" data-author="${escapeHtml(card.author)}">🗑️</button>` : ''}
                 </div>
             </div>
         </div>
-    `).join('');
+    `;
+    }).join('');
+
+    // Retirer la classe d'animation après son exécution pour permettre de futures animations
+    setTimeout(() => {
+        container.querySelectorAll('.card-moved').forEach(card => {
+            card.classList.remove('card-moved');
+        });
+    }, 600);
 
     // Attacher les événements
     if (handlers) {
