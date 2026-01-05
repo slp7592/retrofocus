@@ -10,6 +10,7 @@ let currentSessionId = null;
 let currentUserId = null;
 let currentUserName = null;
 let isOwner = false;
+let currentPhase = 'reflexion'; // reflexion, vote, action
 let listeners = [];
 let votesUsed = 0;
 const MAX_VOTES = 3;
@@ -67,6 +68,7 @@ export async function createNewSession(userName) {
 
     const initialData = {
         owner: currentUserId,
+        phase: 'reflexion', // reflexion, vote, action
         users: {
             [currentUserId]: currentUserName
         },
@@ -122,6 +124,9 @@ export async function joinSession(sessionId, userName) {
 
             // Vérifier si l'utilisateur est le propriétaire
             isOwner = (data.owner === currentUserId);
+
+            // Récupérer la phase actuelle
+            currentPhase = data.phase || 'reflexion';
 
             // Récupérer la liste des utilisateurs
             const users = data.users || {};
@@ -352,6 +357,61 @@ export function watchParticipants(callback) {
 }
 
 /**
+ * Retourne la phase actuelle de la session
+ */
+export function getCurrentPhase() {
+    return currentPhase;
+}
+
+/**
+ * Change la phase de la session (seulement pour l'OP)
+ */
+export async function setPhase(newPhase) {
+    if (!isOwner) {
+        throw new Error('Seul l\'organisateur peut changer la phase');
+    }
+
+    if (!currentSessionId) {
+        throw new Error('Aucune session active');
+    }
+
+    const validPhases = ['reflexion', 'vote', 'action'];
+    if (!validPhases.includes(newPhase)) {
+        throw new Error('Phase invalide');
+    }
+
+    const phaseRef = ref(db, `sessions/${currentSessionId}/phase`);
+
+    try {
+        await set(phaseRef, newPhase);
+        currentPhase = newPhase;
+    } catch (error) {
+        console.error('Erreur lors du changement de phase:', error);
+        throw error;
+    }
+}
+
+/**
+ * Écoute les changements de phase
+ */
+export function watchPhase(callback) {
+    if (!currentSessionId) {
+        throw new Error('Aucune session active');
+    }
+
+    const phaseRef = ref(db, `sessions/${currentSessionId}/phase`);
+
+    const unsubscribe = onValue(phaseRef, (snapshot) => {
+        const phase = snapshot.val() || 'reflexion';
+        currentPhase = phase;
+        callback(phase);
+    });
+
+    listeners.push({ type: 'phase', unsubscribe });
+    return unsubscribe;
+}
+
+/**
  * Nettoie tous les listeners
  */
 export function cleanup() {
@@ -362,5 +422,6 @@ export function cleanup() {
     currentUserId = null;
     currentUserName = null;
     isOwner = false;
+    currentPhase = 'reflexion';
     votesUsed = 0;
 }

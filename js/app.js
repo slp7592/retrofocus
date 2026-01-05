@@ -253,6 +253,7 @@ window.createNewSession = async function() {
         setupCardsListeners();
         setupTimerListener();
         setupParticipantsListener();
+        setupPhaseListener();
         updateUIPermissions();
         updateSessionUI(sessionId);
         await UI.showSuccess('Session créée : ' + sessionId);
@@ -284,6 +285,7 @@ async function handleJoinSession() {
         setupCardsListeners();
         setupTimerListener();
         setupParticipantsListener();
+        setupPhaseListener();
         updateUIPermissions();
         updateSessionUI(sessionId);
         await UI.showSuccess('Session rejointe : ' + sessionId);
@@ -510,6 +512,85 @@ function updateParticipantsList(users) {
         participantsList.style.display = 'none';
     }
 }
+
+/**
+ * Configure le listener pour les changements de phase
+ */
+function setupPhaseListener() {
+    Session.watchPhase(updatePhaseUI);
+}
+
+/**
+ * Met à jour l'UI en fonction de la phase actuelle
+ */
+function updatePhaseUI(phase) {
+    const phaseStepper = document.getElementById('phaseStepper');
+    const phaseControls = document.getElementById('phaseControls');
+    const nextPhaseBtn = document.getElementById('nextPhaseBtn');
+
+    // Afficher le stepper
+    if (phaseStepper) {
+        phaseStepper.style.display = 'block';
+    }
+
+    // Mettre à jour les classes des étapes
+    const steps = document.querySelectorAll('.phase-step');
+    const phases = ['reflexion', 'vote', 'action'];
+    const currentPhaseIndex = phases.indexOf(phase);
+
+    steps.forEach((step, index) => {
+        step.classList.remove('active', 'completed');
+        if (index === currentPhaseIndex) {
+            step.classList.add('active');
+        } else if (index < currentPhaseIndex) {
+            step.classList.add('completed');
+        }
+    });
+
+    // Afficher le bouton pour passer à la phase suivante (OP uniquement)
+    if (Session.isSessionOwner() && phaseControls && nextPhaseBtn) {
+        if (phase === 'reflexion') {
+            nextPhaseBtn.textContent = '▶️ Révéler les cartes et passer au vote';
+            phaseControls.style.display = 'block';
+        } else if (phase === 'vote') {
+            nextPhaseBtn.textContent = '▶️ Terminer les votes et passer aux actions';
+            phaseControls.style.display = 'block';
+        } else {
+            phaseControls.style.display = 'none';
+        }
+    } else if (phaseControls) {
+        phaseControls.style.display = 'none';
+    }
+
+    // Mettre à jour les permissions et l'affichage
+    updateUIPermissions();
+
+    // Re-render les cartes pour appliquer le filtrage selon la phase
+    setupCardsListeners();
+}
+
+/**
+ * Passe à la phase suivante (OP uniquement)
+ */
+window.nextPhase = async function() {
+    try {
+        const currentPhase = Session.getCurrentPhase();
+        let nextPhase;
+
+        if (currentPhase === 'reflexion') {
+            nextPhase = 'vote';
+        } else if (currentPhase === 'vote') {
+            nextPhase = 'action';
+        } else {
+            await UI.showError('Déjà à la dernière phase');
+            return;
+        }
+
+        await Session.setPhase(nextPhase);
+    } catch (error) {
+        await UI.showError(error.message);
+    }
+};
 
 /**
  * Callback pour mettre à jour le timer dans Firebase (OP uniquement)

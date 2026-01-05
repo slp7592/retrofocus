@@ -122,6 +122,29 @@
             </div>
         </header>
 
+        <!-- Bandeau de progression des phases -->
+        <div id="phaseStepper" style="display: none;">
+            <div class="phase-stepper">
+                <div class="phase-step" data-phase="reflexion">
+                    <div class="phase-step-icon">💭</div>
+                    <div class="phase-step-label">Réflexion</div>
+                </div>
+                <div class="phase-step-connector"></div>
+                <div class="phase-step" data-phase="vote">
+                    <div class="phase-step-icon">👍</div>
+                    <div class="phase-step-label">Vote</div>
+                </div>
+                <div class="phase-step-connector"></div>
+                <div class="phase-step" data-phase="action">
+                    <div class="phase-step-icon">🎯</div>
+                    <div class="phase-step-label">Actions</div>
+                </div>
+            </div>
+            <div id="phaseControls" style="display: none; text-align: center; margin-top: 15px;">
+                <button id="nextPhaseBtn" class="btn btn-primary" onclick="nextPhase()"></button>
+            </div>
+        </div>
+
         <div class="session-section">
             <h3>🔗 Session</h3>
             <div class="session-controls">

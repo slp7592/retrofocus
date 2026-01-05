@@ -1,5 +1,5 @@
 import { ref, set, push, remove, update, onValue } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
-import { getCurrentSessionId, getCurrentUserName, isSessionOwner, canVote, incrementVotesUsed } from './session.js';
+import { getCurrentSessionId, getCurrentUserName, isSessionOwner, canVote, incrementVotesUsed, getCurrentPhase } from './session.js';
 
 /**
  * Module de gestion des cartes de rétrospective
@@ -30,6 +30,18 @@ export async function addCard(type, content) {
     const sessionId = getCurrentSessionId();
     if (!sessionId) {
         throw new Error('Aucune session active');
+    }
+
+    const currentPhase = getCurrentPhase();
+
+    // Bloquer l'ajout de cartes positives/négatives après la phase de réflexion
+    if (type !== 'action' && currentPhase !== 'reflexion') {
+        throw new Error('Vous ne pouvez ajouter des cartes qu\'en phase de réflexion');
+    }
+
+    // Bloquer l'ajout d'actions sauf en phase action
+    if (type === 'action' && currentPhase !== 'action') {
+        throw new Error('Vous ne pouvez ajouter des actions qu\'en phase Actions');
     }
 
     // Vérifier les permissions pour les actions
@@ -119,6 +131,13 @@ export async function voteCard(type, key, currentVotes = 0) {
         throw new Error('Aucune session active');
     }
 
+    const currentPhase = getCurrentPhase();
+
+    // Bloquer les votes en dehors de la phase de vote
+    if (currentPhase !== 'vote' && currentPhase !== 'action') {
+        throw new Error('Vous ne pouvez voter qu\'en phase de Vote');
+    }
+
     // Empêcher le vote sur les actions
     if (type === 'action') {
         throw new Error('Les actions ne peuvent pas être votées');
@@ -143,6 +162,7 @@ export async function voteCard(type, key, currentVotes = 0) {
 
 /**
  * Récupère toutes les cartes d'un type avec un listener temps réel
+ * En phase "reflexion", filtre pour n'afficher que les cartes de l'utilisateur actuel
  */
 export function watchCards(type, callback) {
     const sessionId = getCurrentSessionId();
@@ -154,9 +174,19 @@ export function watchCards(type, callback) {
 
     return onValue(typeRef, (snapshot) => {
         const data = snapshot.val() || {};
-        const cards = Object.entries(data)
+        let cards = Object.entries(data)
             .map(([key, card]) => ({ ...card, key }))
             .sort((a, b) => (b.votes || 0) - (a.votes || 0));
+
+        // Filtrer les cartes selon la phase (sauf pour les actions)
+        if (type !== 'action') {
+            const currentPhase = getCurrentPhase();
+            if (currentPhase === 'reflexion') {
+                // En phase de réflexion, afficher uniquement ses propres cartes
+                const currentUserName = getCurrentUserName();
+                cards = cards.filter(card => card.author === currentUserName);
+            }
+        }
 
         callback(cards);
     });
