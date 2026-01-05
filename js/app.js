@@ -565,8 +565,9 @@ function updatePhaseUI(phase) {
     // Mettre à jour les permissions et l'affichage
     updateUIPermissions();
 
-    // Re-render les cartes pour appliquer le filtrage selon la phase
-    setupCardsListeners();
+    // Note: Ne pas re-créer les listeners ici pour préserver l'historique
+    // d'ordre des cartes (previousCardsOrder). Les listeners watchCards
+    // se mettront à jour automatiquement via Firebase.
 }
 
 /**
