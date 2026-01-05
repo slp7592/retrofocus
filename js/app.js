@@ -219,21 +219,48 @@ function canDeleteCard(card, type) {
     return card.author === currentUserName || isOwner;
 }
 
+// Stockage des callbacks de cartes pour pouvoir forcer un refresh
+const cardsCallbacks = {};
+
+/**
+ * Fonction de rendu des cartes partagée
+ */
+function renderCardsForType(type, cards) {
+    const containerId = `cards${UI.capitalize(type)}`;
+    const container = document.getElementById(containerId);
+
+    UI.renderCards(container, cards, type, {
+        onVote: handleVoteCard,
+        onDelete: handleDeleteCard,
+        canDelete: canDeleteCard
+    });
+}
+
 /**
  * Configure les listeners pour les cartes
  */
 function setupCardsListeners() {
     ['positive', 'negative', 'action'].forEach(type => {
-        Cards.watchCards(type, (cards) => {
-            const containerId = `cards${UI.capitalize(type)}`;
-            const container = document.getElementById(containerId);
+        // Stocker le callback pour pouvoir le réutiliser
+        const callback = (cards) => {
+            cardsCallbacks[type] = cards;
+            renderCardsForType(type, cards);
+        };
 
-            UI.renderCards(container, cards, type, {
-                onVote: handleVoteCard,
-                onDelete: handleDeleteCard,
-                canDelete: canDeleteCard
-            });
-        });
+        Cards.watchCards(type, callback);
+    });
+}
+
+/**
+ * Force un refresh de toutes les cartes (utile lors du changement de phase)
+ */
+function refreshAllCards() {
+    ['positive', 'negative', 'action'].forEach(type => {
+        if (cardsCallbacks[type]) {
+            // Appliquer le filtrage selon la phase actuelle
+            const filteredCards = Cards.filterCardsByPhase(cardsCallbacks[type], type);
+            renderCardsForType(type, filteredCards);
+        }
     });
 }
 
@@ -565,9 +592,9 @@ function updatePhaseUI(phase) {
     // Mettre à jour les permissions et l'affichage
     updateUIPermissions();
 
-    // Note: Ne pas re-créer les listeners ici pour préserver l'historique
-    // d'ordre des cartes (previousCardsOrder). Les listeners watchCards
-    // se mettront à jour automatiquement via Firebase.
+    // Forcer un refresh des cartes pour appliquer le filtrage selon la nouvelle phase
+    // Cela déclenche un re-rendu sans perdre l'historique de previousCardsOrder
+    refreshAllCards();
 }
 
 /**

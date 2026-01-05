@@ -161,6 +161,26 @@ export async function voteCard(type, key, currentVotes = 0) {
 }
 
 /**
+ * Filtre les cartes selon la phase actuelle
+ */
+export function filterCardsByPhase(cards, type) {
+    // Ne pas filtrer les actions
+    if (type === 'action') {
+        return cards;
+    }
+
+    const currentPhase = getCurrentPhase();
+    if (currentPhase === 'reflexion') {
+        // En phase de réflexion, afficher uniquement ses propres cartes
+        const currentUserName = getCurrentUserName();
+        return cards.filter(card => card.author === currentUserName);
+    }
+
+    // Dans les autres phases, afficher toutes les cartes
+    return cards;
+}
+
+/**
  * Récupère toutes les cartes d'un type avec un listener temps réel
  * En phase "reflexion", filtre pour n'afficher que les cartes de l'utilisateur actuel
  */
@@ -178,15 +198,8 @@ export function watchCards(type, callback) {
             .map(([key, card]) => ({ ...card, key }))
             .sort((a, b) => (b.votes || 0) - (a.votes || 0));
 
-        // Filtrer les cartes selon la phase (sauf pour les actions)
-        if (type !== 'action') {
-            const currentPhase = getCurrentPhase();
-            if (currentPhase === 'reflexion') {
-                // En phase de réflexion, afficher uniquement ses propres cartes
-                const currentUserName = getCurrentUserName();
-                cards = cards.filter(card => card.author === currentUserName);
-            }
-        }
+        // Filtrer les cartes selon la phase
+        cards = filterCardsByPhase(cards, type);
 
         callback(cards);
     });
