@@ -139,7 +139,10 @@ export function renderCards(container, cards, type, handlers) {
                         <div class="votes">👍 ${card.votes || 0}</div>
                         <button class="card-btn" data-action="vote" data-type="${type}" data-key="${card.key}" data-votes="${card.votes || 0}">⬆️</button>
                     ` : ''}
-                    ${canDelete ? `<button class="card-btn" data-action="delete" data-type="${type}" data-key="${card.key}" data-author="${escapeHtml(card.author)}">🗑️</button>` : ''}
+                    ${canDelete
+                        ? `<button class="card-btn" data-action="delete" data-type="${type}" data-key="${card.key}" data-author="${escapeHtml(card.author)}">🗑️</button>`
+                        : `<span class="card-btn-placeholder"></span>`
+                    }
                 </div>
             </div>
         </div>

@@ -260,6 +260,7 @@ input[type="text"]:focus {
 .card-actions {
     display: flex;
     gap: 10px;
+    align-items: center;
 }
 
 .card-btn {
@@ -268,10 +269,22 @@ input[type="text"]:focus {
     cursor: pointer;
     padding: 5px;
     transition: transform 0.2s;
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .card-btn:hover {
     transform: scale(1.2);
+}
+
+.card-btn-placeholder {
+    width: 24px;
+    height: 24px;
+    display: inline-block;
+    visibility: hidden;
 }
 
 .votes {
