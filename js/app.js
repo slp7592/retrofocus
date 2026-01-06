@@ -275,11 +275,18 @@ function setupCardsListeners() {
  * Force un refresh de toutes les cartes (utile lors du changement de phase)
  */
 function refreshAllCards() {
+    const currentPhase = Session.getCurrentPhase();
+    console.log('refreshAllCards - Phase actuelle:', currentPhase);
+
     ['positive', 'negative', 'action'].forEach(type => {
         if (rawCardsStorage[type]) {
+            console.log(`Type ${type}: ${rawCardsStorage[type].length} cartes brutes stockées`);
             // Appliquer le filtrage selon la phase actuelle
             const filteredCards = Cards.filterCardsByPhase(rawCardsStorage[type], type);
+            console.log(`Type ${type}: ${filteredCards.length} cartes après filtrage`);
             renderCardsForType(type, filteredCards);
+        } else {
+            console.log(`Type ${type}: Aucune carte brute stockée`);
         }
     });
 }
