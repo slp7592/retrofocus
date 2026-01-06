@@ -606,20 +606,38 @@ input[type="text"]:focus {
 @keyframes cardMoved {
     0% {
         background: #f7fafc;
+        border-left-width: 4px;
+    }
+    25% {
+        background: #fff3cd;
+        transform: scale(1.05) translateX(-5px);
+        box-shadow: 0 8px 20px rgba(255, 193, 7, 0.4);
+        border-left-width: 6px;
+        border-left-color: #ffc107;
     }
     50% {
-        background: #fef5e7;
-        transform: scale(1.02);
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        background: #fff9e6;
+        transform: scale(1.08);
+        box-shadow: 0 12px 24px rgba(255, 193, 7, 0.5);
+        border-left-width: 8px;
+        border-left-color: #ff9800;
+    }
+    75% {
+        background: #fff3cd;
+        transform: scale(1.05) translateX(5px);
+        box-shadow: 0 8px 20px rgba(255, 193, 7, 0.4);
+        border-left-width: 6px;
+        border-left-color: #ffc107;
     }
     100% {
         background: #f7fafc;
         transform: scale(1);
+        border-left-width: 4px;
     }
 }
 
 .card-moved {
-    animation: cardMoved 0.6s ease-out;
+    animation: cardMoved 0.8s ease-in-out;
 }
 
 @keyframes fadeIn {

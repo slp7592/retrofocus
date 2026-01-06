@@ -276,14 +276,11 @@ function setupCardsListeners() {
  */
 function refreshAllCards() {
     const currentPhase = Session.getCurrentPhase();
-    console.log('refreshAllCards - Phase actuelle:', currentPhase);
 
     ['positive', 'negative', 'action'].forEach(type => {
         if (rawCardsStorage[type]) {
-            console.log(`Type ${type}: ${rawCardsStorage[type].length} cartes brutes stockées`);
             // Appliquer le filtrage selon la phase actuelle
             const filteredCards = Cards.filterCardsByPhase(rawCardsStorage[type], type);
-            console.log(`Type ${type}: ${filteredCards.length} cartes après filtrage`);
             renderCardsForType(type, filteredCards);
         } else {
             console.log(`Type ${type}: Aucune carte brute stockée`);
@@ -378,6 +375,25 @@ async function handleVoteCard(type, key, currentVotes) {
         await UI.showError(error.message);
     }
 }
+
+/**
+ * Copie l'ID de session dans le presse-papier
+ */
+window.copySessionIdToClipboard = async function() {
+    try {
+        const sessionId = Session.getCurrentSessionId();
+        if (!sessionId) {
+            await UI.showError('Aucune session active');
+            return;
+        }
+
+        await navigator.clipboard.writeText(sessionId);
+        await UI.showSuccess('ID de session copié dans le presse-papier !');
+    } catch (error) {
+        console.error('Erreur lors de la copie:', error);
+        await UI.showError('Impossible de copier l\'ID de session');
+    }
+};
 
 /**
  * Gère la suppression d'une carte
