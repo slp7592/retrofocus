@@ -161,7 +161,7 @@ export function renderCards(container, cards, type, handlers) {
 
     // Attacher les événements
     if (handlers) {
-        if (showVotes) {
+        if (canVote) {
             container.querySelectorAll('[data-action="vote"]').forEach(btn => {
                 btn.addEventListener('click', () => {
                     handlers.onVote(
