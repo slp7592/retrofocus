@@ -20,6 +20,10 @@ Allez dans **Firebase Console** → **Realtime Database** → **Règles** et col
           ".validate": "newData.isString() && newData.val().length > 0"
         },
 
+        "phase": {
+          ".validate": "newData.isString() && (newData.val() === 'reflexion' || newData.val() === 'vote' || newData.val() === 'action')"
+        },
+
         "users": {
           "$userId": {
             ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 30"
@@ -67,11 +71,20 @@ Allez dans **Firebase Console** → **Realtime Database** → **Règles** et col
 
 Chaque session contient :
 - **owner** : ID de l'organisateur (OP) de la session
+- **phase** : Phase actuelle du workflow ('reflexion', 'vote', ou 'action')
 - **users** : Liste des participants { userId: userName } pour prévenir l'usurpation d'identité
 - **positive** : Cartes des points positifs
 - **negative** : Cartes des points à améliorer
 - **action** : Cartes d'actions (OP uniquement)
 - **timer** : État du minuteur synchronisé
+
+### Validation de la phase
+
+**phase** :
+- Doit être l'une des trois valeurs : 'reflexion', 'vote', ou 'action'
+- Contrôle le workflow de la rétrospective
+- Seul l'OP peut modifier cette valeur (validation côté application)
+- Synchronisé en temps réel pour tous les participants
 
 ### Validation des participants
 
@@ -169,7 +182,8 @@ Les IDs de session sont générés aléatoirement : `retro-XXXXXXX`
 
 ## 🚀 Migration depuis l'ancienne version
 
-Si vous avez des sessions existantes créées avant la v2.0, elles n'auront pas de champ `owner` ou `timer`. L'application gérera automatiquement ces cas :
+Si vous avez des sessions existantes créées avant la v4.0, elles n'auront pas de champ `owner`, `phase` ou `timer`. L'application gérera automatiquement ces cas :
 
 - Sessions sans owner : Personne ne sera considéré comme OP
-- Pour récupérer les droits OP : Créez une nouvelle session
+- Sessions sans phase : La phase par défaut sera 'reflexion'
+- Pour bénéficier du workflow complet : Créez une nouvelle session

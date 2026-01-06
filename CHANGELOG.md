@@ -1,5 +1,122 @@
 # Changelog
 
+## Version 4.0.0 - 2026-01-06
+
+### 🔄 Workflow structuré en 3 phases
+
+#### ✨ Nouvelles fonctionnalités majeures
+
+- **Workflow guidé de rétrospective**
+  - Trois phases distinctes : Réflexion → Vote → Actions
+  - Transition contrôlée par l'organisateur (OP) avec boutons dédiés
+  - Synchronisation temps réel de la phase pour tous les participants
+  - Stepper visuel affichant la progression (💭 → 👍 → 🎯)
+
+- **Phase 1 : Réflexion (💭)**
+  - Chaque participant crée ses cartes de manière **privée**
+  - Les cartes ne sont visibles que par leur auteur
+  - Les votes sont désactivés
+  - Les actions ne peuvent pas être créées
+  - Bouton OP : "▶️ Révéler les cartes et passer au vote"
+
+- **Phase 2 : Vote (👍)**
+  - **Toutes les cartes sont révélées** à tous les participants
+  - Système de vote activé (3 votes maximum par participant)
+  - Tri automatique des cartes par nombre de votes décroissant
+  - **Animation visuelle dorée** quand une carte change de position après un vote
+  - Ajout de nouvelles cartes positives/négatives **bloqué**
+  - Les participants peuvent supprimer leurs propres cartes, l'OP peut tout supprimer
+  - Bouton OP : "▶️ Terminer les votes et passer aux actions"
+
+- **Phase 3 : Actions (🎯)**
+  - Cartes et votes restent **visibles en lecture seule**
+  - Votes **désactivés** (compteur toujours visible)
+  - Suppression des cartes positives/négatives **bloquée**
+  - Seul l'**OP peut créer des actions** pour définir les prochaines étapes
+  - Fin du workflow
+
+- **Copie de l'ID de session**
+  - Clic sur l'ID de session dans le bandeau pour copier dans le presse-papier
+  - Popup de confirmation personnalisée et élégante
+  - Facilite le partage de la session
+
+- **Amélioration des animations**
+  - Animation de mouvement de cartes plus visible avec couleurs dorées/orange
+  - Effet de scale et translation lors du changement de position
+  - Ombre portée animée pour plus de profondeur visuelle
+
+#### 🗄️ Structure Firebase
+
+- **Nouveau champ `phase`** dans les sessions
+  - Valeurs possibles : `'reflexion'`, `'vote'`, `'action'`
+  - Règle de validation Firebase ajoutée
+  - Stockage synchronisé en temps réel
+
+#### 🔧 Améliorations techniques
+
+- `session.js` :
+  - `createNewSession(userName)` initialise avec `phase: 'reflexion'`
+  - `getCurrentPhase()` récupère la phase actuelle
+  - `setPhase(newPhase)` change la phase (OP uniquement)
+  - `watchPhase(callback)` observe les changements de phase en temps réel
+- `cards.js` :
+  - `filterCardsByPhase(cards, type)` filtre les cartes selon la phase
+  - `addCard()` valide la phase avant autorisation d'ajout
+  - `deleteCard()` bloque la suppression pos/neg en phase Actions
+  - `voteCard()` autorise les votes uniquement en phase Vote
+  - `watchCards()` accepte deux callbacks (brut et filtré) pour gérer la révélation
+- `ui.js` :
+  - Séparation de `hasVotingSystem` (affiche le compteur) et `canVote` (affiche le bouton)
+  - Animation `cardMoved` améliorée avec couleurs dorées, scale et translation
+  - `renderCards()` gère les permissions de vote/suppression selon la phase
+- `app.js` :
+  - `setupPhaseListener()` écoute les changements de phase
+  - `updatePhaseUI(phase)` met à jour le stepper et les permissions d'interface
+  - `refreshAllCards()` force le re-rendu des cartes lors du changement de phase
+  - `canDeleteCard(card, type)` détermine les droits de suppression selon la phase
+  - `canVoteOnCards()` détermine si les votes sont possibles
+  - `window.nextPhase()` permet à l'OP de passer à la phase suivante
+  - `window.copySessionIdToClipboard()` copie l'ID avec notification élégante
+  - `rawCardsStorage` stocke les cartes non filtrées pour gérer la révélation
+
+#### 🐛 Corrections de bugs
+
+- ✅ Liste des participants maintenant visible dans le bandeau supérieur
+- ✅ Correction de l'erreur `showVotes is not defined` lors du rendu des cartes
+- ✅ Révélation correcte des cartes lors du passage en phase Vote
+- ✅ Compteur de votes reste visible en phase Actions (seul le bouton est masqué)
+- ✅ Alignement vertical des éléments de carte même sans bouton de suppression
+
+#### 📚 Documentation
+
+- Mise à jour complète de **README.md** avec section "Workflow en 3 phases"
+- Mise à jour complète de **ARCHITECTURE.md** avec mécanismes techniques du workflow
+- Mise à jour de **FIREBASE_RULES.md** avec validation du champ `phase`
+- Ajout de cette entrée dans **CHANGELOG.md**
+
+#### 🎨 Interface utilisateur
+
+- Stepper visuel moderne avec 3 étapes et état actif/complété
+- Boutons de transition de phase visibles uniquement pour l'OP
+- Désactivation conditionnelle des inputs et boutons selon la phase
+- Animation dorée/orange plus visible lors des changements de position
+- Popup personnalisée pour la copie de l'ID de session
+
+#### 🔄 Changements de comportement
+
+**Nouvelle session :**
+- Démarre toujours en phase "Réflexion"
+- L'OP voit le stepper et le bouton pour passer à la phase suivante
+
+**Filtrage des cartes :**
+- Phase Réflexion : chaque utilisateur voit uniquement ses propres cartes
+- Phase Vote et Actions : toutes les cartes sont visibles
+
+**Permissions dynamiques :**
+- Ajout de cartes : autorisé uniquement en Réflexion (pos/neg) et Actions (actions, OP uniquement)
+- Vote : autorisé uniquement en phase Vote
+- Suppression pos/neg : autorisée en Réflexion et Vote, bloquée en Actions
+
 ## Version 3.2.0 - 2026-01-04
 
 ### 🔐 Sécurité anti-usurpation et popups modernes

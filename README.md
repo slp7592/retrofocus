@@ -4,15 +4,27 @@ Application web collaborative pour rétrospectives agiles en temps réel, héber
 
 ## ✨ Fonctionnalités
 
+### Workflow en 3 phases
+- 💭 **Phase Réflexion** : Chacun crée ses cartes de façon privée
+- 👍 **Phase Vote** : Toutes les cartes sont révélées, l'équipe vote pour prioriser
+- 🎯 **Phase Actions** : L'OP définit les actions à entreprendre
+
+### Collaboration temps réel
 - 📝 **Trois colonnes** : Points positifs, Points à améliorer, Actions
-- 👥 **Collaboration temps réel** : Plusieurs utilisateurs simultanés
+- 👥 **Multi-utilisateurs** : Plusieurs participants simultanés
 - 👑 **Système de rôles** : Organisateur (OP) avec droits étendus
 - 🔐 **Protection anti-usurpation** : Noms d'utilisateur uniques par session
-- 👤 **Liste des participants** : Voir qui est présent en temps réel
-- 👍 **Système de votes** : Priorisez les sujets importants (sauf actions)
+- 👤 **Liste des participants** : Voir qui est présent en temps réel avec badges
+
+### Système de votes
+- 👍 **3 votes par personne** : Priorisez les sujets importants
+- 🎨 **Animation visuelle** : Les cartes qui montent dans le classement s'animent
+- 📊 **Tri automatique** : Les cartes les plus votées en haut
+
+### Fonctionnalités avancées
 - ⏱️ **Minuteur synchronisé** : Timer temps réel visible par tous, contrôlable par l'OP
 - 📥 **Export JSON** : Sauvegardez vos rétrospectives (OP uniquement)
-- 🔗 **Partage facile** : Un seul lien pour toute l'équipe
+- 🔗 **Partage facile** : Copiez l'ID de session en un clic
 - 🎨 **Popups modernes** : Notifications élégantes, jamais bloquées par le navigateur
 - 🔒 **Sécurisé** : Content Security Policy configuré + permissions
 - 💯 **100% Gratuit** : GitHub Pages + Firebase gratuit
@@ -54,6 +66,12 @@ Dans Firebase Console → Realtime Database → Règles :
       "$sessionId": {
         ".read": true,
         ".write": true,
+        "owner": {
+          ".validate": "newData.isString() && newData.val().length > 0"
+        },
+        "phase": {
+          ".validate": "newData.isString() && (newData.val() === 'reflexion' || newData.val() === 'vote' || newData.val() === 'action')"
+        },
         "users": {
           "$userId": {
             ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 30"
@@ -71,7 +89,7 @@ Dans Firebase Console → Realtime Database → Règles :
         },
         "action": {
           "$cardId": {
-            ".validate": "newData.hasChildren(['id', 'content', 'author', 'votes', 'timestamp']) && newData.child('content').val().length <= 200 && newData.child('author').val().length <= 30"
+            ".validate": "newData.hasChildren(['id', 'content', 'author', 'timestamp']) && newData.child('content').val().length <= 200 && newData.child('author').val().length <= 30"
           }
         }
       }
@@ -82,22 +100,48 @@ Dans Firebase Console → Realtime Database → Règles :
 
 ## 📖 Utilisation
 
+### 🔄 Workflow de rétrospective
+
+L'application guide l'équipe à travers 3 phases distinctes :
+
+#### Phase 1️⃣ : Réflexion (💭)
+- **Chaque participant crée ses cartes** positives et négatives
+- Les cartes sont **privées** : chacun voit uniquement **ses propres cartes**
+- Les votes sont **désactivés**
+- Les actions ne peuvent pas être créées
+- L'OP voit un bouton **"▶️ Révéler les cartes et passer au vote"**
+
+#### Phase 2️⃣ : Vote (👍)
+- **TOUTES les cartes sont révélées** à tous les participants
+- Chaque participant peut **voter** (3 votes maximum)
+- Les cartes sont **triées par nombre de votes**
+- **Animation visuelle** quand une carte change de position
+- L'ajout de nouvelles cartes positives/négatives est **bloqué**
+- L'OP voit un bouton **"▶️ Terminer les votes et passer aux actions"**
+
+#### Phase 3️⃣ : Actions (🎯)
+- Les cartes et votes restent **visibles en lecture seule**
+- Les votes et suppressions de cartes pos/neg sont **bloqués**
+- Seul l'**OP peut créer des actions** pour définir les prochaines étapes
+- Fin du workflow
+
 ### 👑 Rôles et Permissions
 
 **Organisateur (OP)** - Celui qui crée la session :
+- ✅ Contrôle le **workflow** (passer d'une phase à l'autre)
 - ✅ Toutes les actions des participants
-- ✅ Ajouter/supprimer des **actions**
-- ✅ Supprimer **toutes les cartes** (y compris celles des autres)
+- ✅ Ajouter/supprimer des **actions** (phase Actions uniquement)
+- ✅ Supprimer **toutes les cartes** selon la phase
 - ✅ Contrôler le **minuteur** (démarrer/arrêter)
 - ✅ **Effacer** toutes les données
 - ✅ **Exporter** la rétrospective
 
 **Participants** - Ceux qui rejoignent la session :
-- ✅ Ajouter des points positifs et négatifs
-- ✅ Supprimer **uniquement leurs propres cartes**
-- ✅ Voter sur les points positifs et négatifs (**3 votes max**)
+- ✅ Ajouter des points positifs et négatifs (phase Réflexion uniquement)
+- ✅ Supprimer **leurs propres cartes** (phases Réflexion et Vote uniquement)
+- ✅ Voter sur les points positifs et négatifs (phase Vote uniquement, **3 votes max**)
 - ✅ Voir les actions et le minuteur
-- ❌ Pas d'accès aux actions, minuteur, export ou suppression générale
+- ❌ Pas d'accès au contrôle de phase, actions, minuteur, export ou suppression générale
 
 ### Créer une session (Organisateur)
 
@@ -105,8 +149,9 @@ Dans Firebase Console → Realtime Database → Règles :
 2. Cliquez sur "**Nouvelle session**"
 3. Vous devenez automatiquement l'**organisateur** (OP)
 4. **Votre nom est verrouillé** - impossible de le modifier pour éviter l'usurpation d'identité
-5. Partagez l'ID de session avec votre équipe
+5. Partagez l'ID de session avec votre équipe (cliquez sur l'ID dans le bandeau pour le copier 📋)
 6. Vous verrez la liste des participants rejoindre en temps réel
+7. Le **stepper de phases** s'affiche en haut : 💭 Réflexion → 👍 Vote → 🎯 Actions
 
 ### Rejoindre une session (Participant)
 
@@ -117,7 +162,8 @@ Dans Firebase Console → Realtime Database → Règles :
 5. **Votre nom est verrouillé** après jonction pour éviter l'usurpation d'identité
 6. Vous rejoignez en tant que **participant**
 7. La section de session se masque automatiquement
-8. L'ID de session et la liste des participants s'affichent dans le bandeau supérieur
+8. L'ID de session (cliquable pour copier 📋) et la liste des participants s'affichent dans le bandeau supérieur
+9. Le **stepper de phases** indique la phase actuelle de la rétrospective
 
 ### 🔐 Sécurité des identités
 
@@ -129,28 +175,38 @@ Dans Firebase Console → Realtime Database → Règles :
 
 ### Ajouter des cartes
 
-**Points positifs et négatifs** (tous) :
+**Points positifs et négatifs** (Phase Réflexion uniquement) :
 1. Tapez votre commentaire (max 200 caractères)
 2. Appuyez sur Entrée ou cliquez sur "+"
-3. Vos coéquipiers verront la carte en temps réel
+3. En phase Réflexion : **vos cartes restent privées**
+4. En phase Vote : toutes les cartes sont révélées
+5. ⚠️ Après la phase Réflexion, **impossible d'ajouter de nouvelles cartes**
 
-**Actions** (OP uniquement) :
-1. L'input est **désactivé** pour les participants
-2. Seul l'organisateur peut ajouter des actions
+**Actions** (OP uniquement, Phase Actions) :
+1. L'input est **désactivé** jusqu'à la phase Actions
+2. En phase Actions, seul l'OP peut ajouter des actions
 3. Les actions définissent les prochaines étapes
 
 ### Voter
 
+- **Disponible uniquement en Phase Vote**
 - Cliquez sur ⬆️ pour voter sur les **points positifs et négatifs**
 - Chaque utilisateur dispose de **3 votes maximum**
 - Le compteur de votes restants s'affiche dans le bandeau supérieur
-- Les cartes sont triées par nombre de votes
+- Les cartes sont **triées automatiquement** par nombre de votes
+- **Animation visuelle dorée** 🌟 quand une carte change de position après un vote
 - ⚠️ Les **actions ne peuvent pas être votées**
+- ⚠️ En phase Actions, les votes sont **désactivés** (lecture seule)
 
 ### Supprimer des cartes
 
-- **Participants** : Peuvent supprimer uniquement leurs propres cartes (points positifs/négatifs)
-- **Organisateur (OP)** : Peut supprimer toutes les cartes de tous les utilisateurs
+**En phase Réflexion et Vote :**
+- **Participants** : Peuvent supprimer uniquement leurs propres cartes
+- **Organisateur (OP)** : Peut supprimer toutes les cartes
+- Le bouton 🗑️ n'apparaît que si vous avez le droit de supprimer
+
+**En phase Actions :**
+- Les cartes positives/négatives ne peuvent **plus être supprimées**
 - Seul l'OP peut supprimer des actions
 
 ### Minuteur synchronisé

@@ -77,7 +77,7 @@ export function stop() {
         timerInterval = null;
     }
     timeRemaining = 0;
-    updateDisplay('5:00');
+    updateDisplay('05:00');
 
     // Notifier Firebase
     if (updateCallback) {
