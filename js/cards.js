@@ -183,8 +183,9 @@ export function filterCardsByPhase(cards, type) {
 /**
  * Récupère toutes les cartes d'un type avec un listener temps réel
  * En phase "reflexion", filtre pour n'afficher que les cartes de l'utilisateur actuel
+ * Accepte un second callback optionnel qui reçoit les cartes brutes (avant filtrage)
  */
-export function watchCards(type, callback) {
+export function watchCards(type, callbackFiltered, callbackRaw = null) {
     const sessionId = getCurrentSessionId();
     if (!sessionId) {
         throw new Error('Aucune session active');
@@ -194,13 +195,19 @@ export function watchCards(type, callback) {
 
     return onValue(typeRef, (snapshot) => {
         const data = snapshot.val() || {};
-        let cards = Object.entries(data)
+        const rawCards = Object.entries(data)
             .map(([key, card]) => ({ ...card, key }))
             .sort((a, b) => (b.votes || 0) - (a.votes || 0));
 
-        // Filtrer les cartes selon la phase
-        cards = filterCardsByPhase(cards, type);
+        // Appeler le callback avec les cartes brutes si fourni
+        if (callbackRaw) {
+            callbackRaw(rawCards);
+        }
 
-        callback(cards);
+        // Filtrer les cartes selon la phase
+        const filteredCards = filterCardsByPhase(rawCards, type);
+
+        // Appeler le callback avec les cartes filtrées
+        callbackFiltered(filteredCards);
     });
 }

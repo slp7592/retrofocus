@@ -219,8 +219,8 @@ function canDeleteCard(card, type) {
     return card.author === currentUserName || isOwner;
 }
 
-// Stockage des callbacks de cartes pour pouvoir forcer un refresh
-const cardsCallbacks = {};
+// Stockage des cartes brutes (avant filtrage) pour pouvoir forcer un refresh
+const rawCardsStorage = {};
 
 /**
  * Fonction de rendu des cartes partagée
@@ -241,13 +241,17 @@ function renderCardsForType(type, cards) {
  */
 function setupCardsListeners() {
     ['positive', 'negative', 'action'].forEach(type => {
-        // Stocker le callback pour pouvoir le réutiliser
-        const callback = (cards) => {
-            cardsCallbacks[type] = cards;
-            renderCardsForType(type, cards);
-        };
-
-        Cards.watchCards(type, callback);
+        Cards.watchCards(
+            type,
+            // Callback pour les cartes filtrées (affichage)
+            (filteredCards) => {
+                renderCardsForType(type, filteredCards);
+            },
+            // Callback pour les cartes brutes (stockage)
+            (rawCards) => {
+                rawCardsStorage[type] = rawCards;
+            }
+        );
     });
 }
 
@@ -256,9 +260,9 @@ function setupCardsListeners() {
  */
 function refreshAllCards() {
     ['positive', 'negative', 'action'].forEach(type => {
-        if (cardsCallbacks[type]) {
+        if (rawCardsStorage[type]) {
             // Appliquer le filtrage selon la phase actuelle
-            const filteredCards = Cards.filterCardsByPhase(cardsCallbacks[type], type);
+            const filteredCards = Cards.filterCardsByPhase(rawCardsStorage[type], type);
             renderCardsForType(type, filteredCards);
         }
     });
