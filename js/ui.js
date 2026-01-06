@@ -106,8 +106,10 @@ export function renderCards(container, cards, type, handlers) {
     if (!container) return;
 
     // Les actions n'ont pas de système de vote
-    // En phase Actions, ne pas afficher les boutons de vote
-    const showVotes = type !== 'action' && (!handlers.canVote || handlers.canVote());
+    const hasVotingSystem = type !== 'action';
+
+    // Afficher le bouton de vote uniquement si on peut voter
+    const canVote = hasVotingSystem && (!handlers.canVote || handlers.canVote());
 
     // Détecter les cartes qui ont changé de position
     const previousOrder = previousCardsOrder[type] || [];
@@ -136,9 +138,9 @@ export function renderCards(container, cards, type, handlers) {
             <div class="card-footer">
                 <span class="card-author">${escapeHtml(card.author)}</span>
                 <div class="card-actions">
-                    ${showVotes ? `
+                    ${hasVotingSystem ? `
                         <div class="votes">👍 ${card.votes || 0}</div>
-                        <button class="card-btn" data-action="vote" data-type="${type}" data-key="${card.key}" data-votes="${card.votes || 0}">⬆️</button>
+                        ${canVote ? `<button class="card-btn" data-action="vote" data-type="${type}" data-key="${card.key}" data-votes="${card.votes || 0}">⬆️</button>` : ''}
                     ` : ''}
                     ${canDelete
                         ? `<button class="card-btn" data-action="delete" data-type="${type}" data-key="${card.key}" data-author="${escapeHtml(card.author)}">🗑️</button>`
