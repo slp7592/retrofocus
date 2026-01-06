@@ -209,14 +209,29 @@ function setupEventListeners() {
 function canDeleteCard(card, type) {
     const currentUserName = Session.getCurrentUserName();
     const isOwner = Session.isSessionOwner();
+    const currentPhase = Session.getCurrentPhase();
 
     // Pour les actions : seul l'OP peut supprimer
     if (type === 'action') {
         return isOwner;
     }
 
+    // Pour les points positifs/négatifs : bloquer la suppression en phase Actions
+    if (currentPhase === 'action') {
+        return false;
+    }
+
     // Pour les points positifs/négatifs : l'auteur ou l'OP peuvent supprimer
     return card.author === currentUserName || isOwner;
+}
+
+/**
+ * Détermine si les votes sont possibles
+ */
+function canVoteOnCards() {
+    const currentPhase = Session.getCurrentPhase();
+    // Les votes ne sont possibles qu'en phase Vote
+    return currentPhase === 'vote';
 }
 
 // Stockage des cartes brutes (avant filtrage) pour pouvoir forcer un refresh
@@ -232,7 +247,8 @@ function renderCardsForType(type, cards) {
     UI.renderCards(container, cards, type, {
         onVote: handleVoteCard,
         onDelete: handleDeleteCard,
-        canDelete: canDeleteCard
+        canDelete: canDeleteCard,
+        canVote: canVoteOnCards
     });
 }
 

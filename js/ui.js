@@ -106,7 +106,8 @@ export function renderCards(container, cards, type, handlers) {
     if (!container) return;
 
     // Les actions n'ont pas de système de vote
-    const showVotes = type !== 'action';
+    // En phase Actions, ne pas afficher les boutons de vote
+    const showVotes = type !== 'action' && (!handlers.canVote || handlers.canVote());
 
     // Détecter les cartes qui ont changé de position
     const previousOrder = previousCardsOrder[type] || [];

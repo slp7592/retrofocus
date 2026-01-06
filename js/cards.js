@@ -92,8 +92,14 @@ export async function deleteCard(type, key, cardAuthor, showConfirmCallback) {
         throw new Error('Aucune session active');
     }
 
+    const currentPhase = getCurrentPhase();
     const isOwner = isSessionOwner();
     const currentUser = getUserName();
+
+    // Bloquer la suppression des cartes positives/négatives en phase Actions
+    if (type !== 'action' && currentPhase === 'action') {
+        throw new Error('Vous ne pouvez plus supprimer de cartes en phase Actions');
+    }
 
     // Vérifier les permissions pour les actions
     if (type === 'action' && !isOwner) {
@@ -134,7 +140,7 @@ export async function voteCard(type, key, currentVotes = 0) {
     const currentPhase = getCurrentPhase();
 
     // Bloquer les votes en dehors de la phase de vote
-    if (currentPhase !== 'vote' && currentPhase !== 'action') {
+    if (currentPhase !== 'vote') {
         throw new Error('Vous ne pouvez voter qu\'en phase de Vote');
     }
 
