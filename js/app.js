@@ -543,19 +543,20 @@ function setupParticipantsListener() {
  * Met à jour l'affichage de la liste des participants
  */
 function updateParticipantsList(users) {
-    const participantsList = document.getElementById('participantsList');
+    const participantsSidebar = document.getElementById('participantsSidebar');
     const participantsCount = document.getElementById('participantsCount');
     const participantsNames = document.getElementById('participantsNames');
 
-    if (!participantsList || !participantsCount || !participantsNames) return;
+    if (!participantsSidebar || !participantsCount || !participantsNames) return;
 
     const userEntries = Object.entries(users);
     const count = userEntries.length;
 
     participantsCount.textContent = count;
 
-    if (count > 0) {
-        participantsList.style.display = 'block';
+    // Afficher la sidebar seulement s'il y a plus d'un participant
+    if (count > 1) {
+        participantsSidebar.style.display = 'block';
 
         const currentUserId = Session.getCurrentUserId();
 
@@ -579,7 +580,7 @@ function updateParticipantsList(users) {
             })
             .join('');
     } else {
-        participantsList.style.display = 'none';
+        participantsSidebar.style.display = 'none';
     }
 }
 

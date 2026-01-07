@@ -99,28 +99,24 @@
 
     <!-- Application principale -->
     <div class="container" id="mainApp" style="display: none;">
-        <header>
-            <h1>🔄 Rétrospective Sprint</h1>
-            <div id="headerSessionId" style="display: none; color: #667eea; font-weight: 600; font-size: 14px; cursor: pointer;" onclick="copySessionIdToClipboard()" title="Cliquer pour copier l'ID de session">
-                Session: <span id="headerSessionIdText"></span>
-            </div>
-            <div id="participantsList" style="display: none; margin-top: 10px;">
-                <p style="color: #718096; font-size: 13px; margin-bottom: 8px; font-weight: 600;">
-                    👥 Participants (<span id="participantsCount">0</span>)
-                </p>
-                <div id="participantsNames" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
-            </div>
-            <div class="session-info">
-                <div class="user-name">
-                    <span>👤</span>
-                    <input type="text" id="userName" placeholder="Votre nom" maxlength="30">
-                </div>
-                <div id="votesRemaining" style="display: none; color: #667eea; font-weight: 600; margin-right: 15px;">
-                    👍 Votes restants: <span id="votesCount">3</span>
-                </div>
-                <button id="clearAllBtn" class="btn btn-danger" onclick="clearAll()">🗑️ Tout effacer</button>
-            </div>
-        </header>
+        <div class="app-layout">
+            <div class="main-content">
+                <header>
+                    <img src="retrofocus.png" alt="Retrofocus" class="logo-banner">
+                    <div id="headerSessionId" style="display: none; color: #667eea; font-weight: 600; font-size: 14px; cursor: pointer;" onclick="copySessionIdToClipboard()" title="Cliquer pour copier l'ID de session">
+                        Session: <span id="headerSessionIdText"></span>
+                    </div>
+                    <div class="session-info">
+                        <div class="user-name">
+                            <span>👤</span>
+                            <input type="text" id="userName" placeholder="Votre nom" maxlength="30">
+                        </div>
+                        <div id="votesRemaining" style="display: none; color: #667eea; font-weight: 600; margin-right: 15px;">
+                            👍 Votes restants: <span id="votesCount">3</span>
+                        </div>
+                        <button id="clearAllBtn" class="btn btn-danger" onclick="clearAll()">🗑️ Tout effacer</button>
+                    </div>
+                </header>
 
         <!-- Bandeau de progression des phases -->
         <div id="phaseStepper" style="display: none;">
@@ -216,6 +212,17 @@
         <div class="export-section">
             <h3>📊 Exporter la rétrospective</h3>
             <button class="btn btn-primary" onclick="exportData()">📥 Télécharger (JSON)</button>
+        </div>
+            </div>
+
+            <!-- Sidebar des participants -->
+            <aside id="participantsSidebar" class="participants-sidebar" style="display: none;">
+                <div class="sidebar-header">
+                    <h3>👥 Participants</h3>
+                    <span id="participantsCount" class="participants-count">0</span>
+                </div>
+                <div id="participantsNames" class="participants-list"></div>
+            </aside>
         </div>
     </div>
 

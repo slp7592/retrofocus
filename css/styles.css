@@ -12,8 +12,27 @@ body {
 }
 
 .container {
-    max-width: 1400px;
+    max-width: 1600px;
     margin: 0 auto;
+}
+
+/* Layout principal avec sidebar */
+.app-layout {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+.main-content {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Logo banner */
+.logo-banner {
+    max-width: 454px;
+    height: auto;
+    display: block;
 }
 
 .setup-modal {
@@ -437,6 +456,56 @@ input[type="text"]:focus {
     color: white;
 }
 
+/* Sidebar des participants */
+.participants-sidebar {
+    width: 250px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    padding: 20px;
+    position: sticky;
+    top: 20px;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+}
+
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.sidebar-header h3 {
+    color: #667eea;
+    font-size: 18px;
+    margin: 0;
+}
+
+.participants-count {
+    background: #667eea;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.participants-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.participants-list .participant-badge {
+    display: block;
+    text-align: left;
+    width: 100%;
+    box-sizing: border-box;
+}
+
 /* Popup personnalisé */
 .custom-modal {
     position: fixed;
@@ -656,6 +725,28 @@ input[type="text"]:focus {
     }
 }
 
+@media (max-width: 1024px) {
+    .app-layout {
+        flex-direction: column;
+    }
+
+    .participants-sidebar {
+        width: 100%;
+        position: static;
+        max-height: none;
+    }
+
+    .participants-list {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .participants-list .participant-badge {
+        width: auto;
+        display: inline-block;
+    }
+}
+
 @media (max-width: 768px) {
     .columns {
         grid-template-columns: 1fr;
@@ -692,5 +783,9 @@ input[type="text"]:focus {
     .custom-modal-content {
         max-width: 90%;
         padding: 20px;
+    }
+
+    .logo-banner {
+        max-width: 200px;
     }
 }
