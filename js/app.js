@@ -221,7 +221,12 @@ function canDeleteCard(card, type) {
         return false;
     }
 
-    // Pour les points positifs/négatifs : l'auteur ou l'OP peuvent supprimer
+    // En phase Vote : seul l'OP peut supprimer
+    if (currentPhase === 'vote') {
+        return isOwner;
+    }
+
+    // Pour les points positifs/négatifs en phase Réflexion ou Regroupement : l'auteur ou l'OP peuvent supprimer
     return card.author === currentUserName || isOwner;
 }
 
@@ -299,8 +304,6 @@ function setupCardsListeners() {
  * Force un refresh de toutes les cartes (utile lors du changement de phase)
  */
 function refreshAllCards() {
-    const currentPhase = Session.getCurrentPhase();
-
     ['positive', 'negative', 'action'].forEach(type => {
         if (rawCardsStorage[type]) {
             // Appliquer le filtrage selon la phase actuelle

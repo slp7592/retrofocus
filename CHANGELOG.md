@@ -1,5 +1,129 @@
 # Changelog
 
+## Version 4.1.0 - 2026-01-07
+
+### 📦 Phase de Regroupement
+
+#### ✨ Nouvelles fonctionnalités majeures
+
+- **Workflow guidé de rétrospective étendu à 4 phases**
+  - Quatre phases distinctes : Réflexion → Regroupement → Vote → Actions
+  - Nouvelle phase de regroupement entre Réflexion et Vote
+  - Transition contrôlée par l'organisateur (OP) avec boutons dédiés
+  - Synchronisation temps réel de la phase pour tous les participants
+  - Stepper visuel affichant la progression (💭 → 📦 → 👍 → 🎯)
+
+- **Phase 2 : Regroupement (📦)**
+  - **Toutes les cartes sont révélées** à tous les participants
+  - Seul l'**OP peut regrouper** les cartes similaires par **drag & drop**
+  - Glisser-déposer une carte sur une autre pour créer un groupe
+  - Les cartes groupées affichent un **badge 📦** avec le nombre de cartes
+  - **Cliquez sur le badge** pour voir le détail des cartes du groupe en popup
+  - Boutons de **dégroupement** : ↩️ pour retirer une carte, 📤 pour tout le groupe
+  - Les votes et l'ajout de nouvelles cartes sont **bloqués**
+  - Les groupes sont **verrouillés** en passant à la phase Vote
+  - Bouton OP : "▶️ Verrouiller les groupes et passer au vote"
+
+- **Système de drag & drop**
+  - Activation uniquement en phase Regroupement pour l'OP
+  - Highlight visuel des zones de dépôt au survol (classe `.drop-target`)
+  - Support du glisser-déposer sur les cartes individuelles et les groupes
+  - Animation fluide pendant le drag (classe `.dragging`)
+
+- **Affichage des groupes**
+  - La **première carte** du groupe est visible avec un badge
+  - Le **compteur de votes** affiche uniquement les votes de la première carte
+  - Un vote sur le groupe incrémente uniquement la première carte
+  - Modal de détail affichant toutes les cartes du groupe (sans votes)
+
+- **Phase 3 : Vote (👍) - Mise à jour**
+  - Les **groupes sont verrouillés** (plus de regroupement possible)
+  - Possibilité de voter sur les **cartes individuelles ou groupes**
+  - Un vote sur un groupe compte comme **1 seul vote** sur la première carte
+  - Seul l'**OP peut supprimer** des cartes (participants ne peuvent plus supprimer)
+
+#### 🗄️ Structure Firebase
+
+- **Nouveau champ `groupId` optionnel** dans les cartes positives et négatives
+  - Les cartes avec le même `groupId` forment un groupe
+  - Règle de validation Firebase mise à jour
+  - Stockage synchronisé en temps réel
+
+- **Nouveau champ `phase` mis à jour**
+  - Valeurs possibles : `'reflexion'`, `'regroupement'`, `'vote'`, `'action'`
+  - Règle de validation Firebase ajoutée
+
+#### 🔧 Améliorations techniques
+
+- `session.js` :
+  - Ajout de `'regroupement'` dans le tableau `validPhases`
+- `cards.js` :
+  - `groupCards(type, draggedKey, targetKey)` regroupe deux cartes (OP uniquement, phase Regroupement)
+  - `ungroupCard(type, cardKey)` retire une carte d'un groupe (OP uniquement, phase Regroupement)
+  - `ungroupAll(type, groupId)` dégrouper toutes les cartes d'un groupe (OP uniquement, phase Regroupement)
+  - `organizeCardsIntoGroups(cards)` organise les cartes en groupes pour l'affichage
+  - `getCardsInGroup(cards, groupId)` récupère toutes les cartes d'un groupe
+  - `voteCard()` mis à jour pour voter uniquement sur la première carte d'un groupe
+  - Validation de la phase regroupement ajoutée
+- `ui.js` :
+  - `renderCards()` complètement réécrit pour supporter les groupes
+  - `setupDragAndDrop()` configure le système de drag & drop
+  - `showGroupDetailModal(cards)` affiche la modal de détail d'un groupe (sans votes)
+  - Support des boutons de dégroupement (↩️ individuel, 📤 tout le groupe)
+  - Rendu conditionnel des boutons selon la phase
+- `app.js` :
+  - `canGroupCards()` détermine si le regroupement est autorisé
+  - `isGroupingPhase()` vérifie si on est en phase Regroupement
+  - `handleGroupCards(type, draggedKey, targetKey)` gère le regroupement
+  - `handleUngroupCard(type, cardKey)` gère le dégroupement individuel
+  - `handleUngroupAll(type, groupId)` gère le dégroupement de tout un groupe
+  - `renderCardsForType()` mis à jour pour organiser les cartes en groupes
+  - `canDeleteCard()` mis à jour : en phase Vote, seul l'OP peut supprimer
+  - `nextPhase()` mis à jour pour inclure la transition Regroupement
+  - `updatePhaseUI()` mis à jour pour gérer 4 phases
+  - `window.showGroupDetail()` fonction globale pour afficher le détail d'un groupe
+
+#### 🎨 Styles CSS
+
+- `.card-group` : Style pour les cartes groupées
+- `.card-group-badge` : Badge affichant le nombre de cartes dans le groupe
+- `.card-ungroup-btn` : Bouton pour retirer une carte d'un groupe (↩️)
+- `.card-ungroup-all-btn` : Bouton pour dégrouper tout le groupe (📤)
+- `.dragging` : Style pendant le glisser
+- `.drop-target` : Highlight des zones de dépôt
+- Modal de détail de groupe avec `.group-detail-card`
+
+#### 🔄 Changements de comportement
+
+**Nouvelle session :**
+- Démarre toujours en phase "Réflexion"
+- L'OP voit le stepper avec 4 phases et le bouton pour passer à la phase suivante
+
+**Workflow de suppression :**
+- Phase Réflexion : Participants peuvent supprimer leurs propres cartes
+- Phase Regroupement : Seul l'OP peut supprimer (participants bloqués)
+- Phase Vote : Seul l'OP peut supprimer (participants bloqués)
+- Phase Actions : Suppression pos/neg bloquée pour tous
+
+**Permissions dynamiques :**
+- Regroupement : autorisé uniquement en phase Regroupement pour l'OP
+- Vote : autorisé uniquement en phase Vote
+- Vote sur groupe : incrémente uniquement la première carte du groupe
+
+#### 🐛 Corrections de bugs
+
+- ✅ Alignement vertical des votes et boutons avec placeholders
+- ✅ Vote sur groupe incrémente uniquement la première carte (pas toutes)
+- ✅ Les votes ne sont pas affichés dans la modal de détail de groupe
+- ✅ Suppression réservée à l'OP en phase Vote
+
+#### 📚 Documentation
+
+- Mise à jour complète de **README.md** avec section "Workflow en 4 phases" et regroupement
+- Mise à jour complète de **ARCHITECTURE.md** avec mécanismes techniques du regroupement
+- Mise à jour de **FIREBASE_RULES.md** avec validation du champ `groupId` et phase `regroupement`
+- Ajout de cette entrée dans **CHANGELOG.md**
+
 ## Version 4.0.0 - 2026-01-06
 
 ### 🔄 Workflow structuré en 3 phases

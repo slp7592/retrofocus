@@ -51,7 +51,7 @@ validateConfig(config)         // Valide la configuration
 **Responsabilités :**
 - Création de nouvelles sessions avec phase initiale 'reflexion'
 - Jonction à des sessions existantes avec validation du nom unique
-- **Gestion du workflow en 3 phases** (reflexion, vote, action)
+- **Gestion du workflow en 4 phases** (reflexion, regroupement, vote, action)
 - Gestion de la liste des participants en temps réel
 - Verrouillage du nom d'utilisateur après jonction
 - Gestion des listeners temps réel
@@ -65,7 +65,7 @@ createNewSession(userName)     // Crée une nouvelle session (nom obligatoire, p
 joinSession(sessionId, userName)  // Rejoint une session (validation unicité)
 getCurrentSessionId()          // Récupère l'ID de session actuel
 getCurrentUserName()           // Récupère le nom d'utilisateur verrouillé
-getCurrentPhase()              // Récupère la phase actuelle (reflexion/vote/action)
+getCurrentPhase()              // Récupère la phase actuelle (reflexion/regroupement/vote/action)
 setPhase(newPhase)             // Change la phase (OP uniquement)
 watchPhase(callback)           // Observe les changements de phase
 setupRealtimeListener(type, callback)  // Configure listener temps réel
@@ -79,24 +79,39 @@ exportSession(callback)        // Exporte en JSON
 - Ajout de cartes (positive/negative/action) **avec validation selon la phase**
 - Suppression de cartes avec confirmation personnalisée **selon la phase**
 - Vote sur les cartes **uniquement en phase Vote**
+- **Regroupement de cartes** (drag & drop, OP uniquement en phase Regroupement)
 - **Filtrage des cartes selon la phase** (privé en Réflexion, public après)
+- **Organisation des cartes en groupes** pour l'affichage
 - Synchronisation temps réel des cartes
 - Utilisation du nom d'utilisateur verrouillé de la session
 
 **Règles par phase :**
-- **Réflexion** : Ajout pos/neg autorisé, votes bloqués, actions bloquées
-- **Vote** : Ajout bloqué, votes autorisés, suppression pos/neg autorisée, actions bloquées
-- **Actions** : Ajout bloqué sauf actions (OP), votes bloqués, suppression pos/neg bloquée
+- **Réflexion** : Ajout pos/neg autorisé, votes bloqués, regroupement bloqué, actions bloquées
+- **Regroupement** : Ajout bloqué, votes bloqués, regroupement autorisé (OP), actions bloquées
+- **Vote** : Ajout bloqué, votes autorisés, regroupement bloqué, suppression pos/neg OP uniquement, actions bloquées
+- **Actions** : Ajout bloqué sauf actions (OP), votes bloqués, regroupement bloqué, suppression pos/neg bloquée
 
 **API principale :**
 ```javascript
 initialize(database)           // Initialise avec la DB Firebase
 addCard(type, content)         // Ajoute une carte (validation phase)
 deleteCard(type, key, author, confirmCallback)  // Supprime une carte (validation phase)
-voteCard(type, key, votes)     // Vote pour une carte (phase Vote uniquement)
+voteCard(type, key, votes, isGroup, groupId)     // Vote pour une carte ou groupe (phase Vote uniquement)
+groupCards(type, draggedKey, targetKey)  // Regroupe deux cartes (phase Regroupement, OP uniquement)
+ungroupCard(type, cardKey)     // Retire une carte d'un groupe (phase Regroupement, OP uniquement)
+ungroupAll(type, groupId)      // Dégrouper toutes les cartes d'un groupe (phase Regroupement, OP uniquement)
+organizeCardsIntoGroups(cards) // Organise les cartes en groupes pour l'affichage
+getCardsInGroup(cards, groupId)  // Récupère toutes les cartes d'un groupe
 watchCards(type, callbackFiltered, callbackRaw)  // Observe avec filtrage par phase
 filterCardsByPhase(cards, type)  // Filtre les cartes selon la phase actuelle
 ```
+
+**Système de regroupement :**
+- Chaque carte possède un champ `groupId` optionnel
+- Les cartes avec le même `groupId` forment un groupe
+- `organizeCardsIntoGroups()` retourne un tableau d'éléments mixtes (cartes individuelles ou groupes)
+- Un groupe affiche uniquement la première carte avec un badge indiquant le nombre
+- Le vote sur un groupe incrémente uniquement la première carte
 
 ### ⏱️ js/timer.js
 **Responsabilités :**
@@ -122,7 +137,9 @@ syncFromFirebase(timerData)    // Synchronise avec Firebase (participants)
 - Gestion du DOM
 - **Système de popups personnalisées** (remplace alert/confirm natifs)
 - **Rendu des cartes avec animations** de mouvement lors du tri
-- **Gestion des permissions d'affichage** (boutons vote/suppression selon phase)
+- **Rendu des groupes de cartes** avec badge et détails
+- **Système de drag & drop** pour le regroupement
+- **Gestion des permissions d'affichage** (boutons vote/suppression/regroupement selon phase)
 - Copie dans le presse-papier
 - Téléchargement de fichiers
 
@@ -133,7 +150,8 @@ copyToClipboard(text)          // Copie dans le presse-papier
 showError(message)             // Affiche une popup d'erreur personnalisée
 showSuccess(message)           // Affiche une popup de succès personnalisée
 showConfirm(message)           // Affiche une popup de confirmation personnalisée
-renderCards(container, cards, type, handlers)  // Rend les cartes avec animations
+renderCards(container, items, type, handlers)  // Rend les cartes/groupes avec animations et drag & drop
+showGroupDetailModal(cards)    // Affiche la modal de détail d'un groupe
 downloadJSON(data, filename)   // Télécharge JSON
 getInputValue(id)              // Récupère valeur d'input
 setInputValue(id, value)       // Définit valeur d'input
@@ -144,6 +162,12 @@ capitalize(str)                // Capitalise la première lettre
 - Détection automatique des cartes qui changent de position
 - Animation visuelle dorée quand une carte monte/descend après un vote
 - Stockage de l'ordre précédent pour comparaison
+
+**Drag & Drop :**
+- Activation uniquement en phase Regroupement pour l'OP
+- Highlight visuel des zones de dépôt au survol
+- Support du glisser-déposer sur les cartes individuelles et les groupes
+- Boutons de dégroupement (↩️ individuel, 📤 tout le groupe)
 
 ### 🚀 js/app.js
 **Responsabilités :**
@@ -198,45 +222,56 @@ https://votre-domaine.github.io/retrofocus/?config=eyJhcGlLZXkiOiJBSXphU3kuLi4if
 - L'URL est nettoyée après récupération de la config
 - La config est sauvegardée dans localStorage pour les prochaines visites
 
-## 🔄 Workflow en 3 phases
+## 🔄 Workflow en 4 phases
 
 ### Vue d'ensemble
 
-L'application guide l'équipe à travers un workflow structuré en 3 phases, géré par l'organisateur (OP).
+L'application guide l'équipe à travers un workflow structuré en 4 phases, géré par l'organisateur (OP).
 
 ```
 Phase 1: Réflexion (💭)
 └─> Cartes privées, pas de votes
-    └─> [Bouton OP] "Révéler les cartes et passer au vote"
-        └─> Phase 2: Vote (👍)
-            └─> Toutes cartes révélées, votes actifs
-                └─> [Bouton OP] "Terminer les votes et passer aux actions"
-                    └─> Phase 3: Actions (🎯)
-                        └─> Lecture seule, création d'actions (OP)
+    └─> [Bouton OP] "Révéler les cartes et passer au regroupement"
+        └─> Phase 2: Regroupement (📦)
+            └─> Toutes cartes révélées, regroupement actif (OP)
+                └─> [Bouton OP] "Verrouiller les groupes et passer au vote"
+                    └─> Phase 3: Vote (👍)
+                        └─> Groupes verrouillés, votes actifs
+                            └─> [Bouton OP] "Terminer les votes et passer aux actions"
+                                └─> Phase 4: Actions (🎯)
+                                    └─> Lecture seule, création d'actions (OP)
 ```
 
 ### Mécanismes techniques
 
 **1. Stockage de la phase**
-- Champ `phase` dans Firebase : `'reflexion' | 'vote' | 'action'`
+- Champ `phase` dans Firebase : `'reflexion' | 'regroupement' | 'vote' | 'action'`
 - Variable locale `currentPhase` dans session.js
 - Synchronisation temps réel via `watchPhase()`
 
 **2. Filtrage des cartes**
 - `watchCards()` retourne 2 callbacks : cartes brutes + cartes filtrées
 - En phase Réflexion : `filterCardsByPhase()` ne garde que les cartes de l'utilisateur
-- En phases Vote/Actions : toutes les cartes sont visibles
+- En phases Regroupement/Vote/Actions : toutes les cartes sont visibles
 
-**3. Validation des actions**
+**3. Regroupement des cartes**
+- `groupCards()` ajoute un `groupId` aux cartes pour former un groupe
+- `organizeCardsIntoGroups()` organise les cartes en groupes pour le rendu
+- `ungroupCard()` et `ungroupAll()` permettent de retirer des cartes des groupes
+- Uniquement disponible en phase Regroupement pour l'OP
+
+**4. Validation des actions**
 - `addCard()` vérifie la phase avant d'autoriser l'ajout
+- `groupCards()` bloque si `currentPhase !== 'regroupement'` ou si pas OP
 - `voteCard()` bloque si `currentPhase !== 'vote'`
 - `deleteCard()` bloque la suppression pos/neg en phase Actions
 
-**4. Interface utilisateur**
-- Stepper visuel avec 3 étapes (💭→👍→🎯)
+**5. Interface utilisateur**
+- Stepper visuel avec 4 étapes (💭→📦→👍→🎯)
 - Boutons OP pour changer de phase (visibles OP uniquement)
 - Désactivation conditionnelle des inputs et boutons
-- Masquage des boutons de vote/suppression selon permissions
+- Masquage des boutons de vote/suppression/regroupement selon permissions
+- Drag & drop actif uniquement en phase Regroupement pour l'OP
 
 ## Flux de données
 

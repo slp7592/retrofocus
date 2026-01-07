@@ -21,7 +21,7 @@ Allez dans **Firebase Console** → **Realtime Database** → **Règles** et col
         },
 
         "phase": {
-          ".validate": "newData.isString() && (newData.val() === 'reflexion' || newData.val() === 'vote' || newData.val() === 'action')"
+          ".validate": "newData.isString() && (newData.val() === 'reflexion' || newData.val() === 'regroupement' || newData.val() === 'vote' || newData.val() === 'action')"
         },
 
         "users": {
@@ -32,13 +32,13 @@ Allez dans **Firebase Console** → **Realtime Database** → **Règles** et col
 
         "positive": {
           "$cardId": {
-            ".validate": "newData.hasChildren(['id', 'content', 'author', 'votes', 'timestamp']) && newData.child('content').val().length <= 200 && newData.child('author').val().length <= 30 && newData.child('votes').isNumber()"
+            ".validate": "newData.hasChildren(['id', 'content', 'author', 'votes', 'timestamp']) && newData.child('content').val().length <= 200 && newData.child('author').val().length <= 30 && newData.child('votes').isNumber() && (!newData.child('groupId').exists() || newData.child('groupId').isString())"
           }
         },
 
         "negative": {
           "$cardId": {
-            ".validate": "newData.hasChildren(['id', 'content', 'author', 'votes', 'timestamp']) && newData.child('content').val().length <= 200 && newData.child('author').val().length <= 30 && newData.child('votes').isNumber()"
+            ".validate": "newData.hasChildren(['id', 'content', 'author', 'votes', 'timestamp']) && newData.child('content').val().length <= 200 && newData.child('author').val().length <= 30 && newData.child('votes').isNumber() && (!newData.child('groupId').exists() || newData.child('groupId').isString())"
           }
         },
 
@@ -71,17 +71,17 @@ Allez dans **Firebase Console** → **Realtime Database** → **Règles** et col
 
 Chaque session contient :
 - **owner** : ID de l'organisateur (OP) de la session
-- **phase** : Phase actuelle du workflow ('reflexion', 'vote', ou 'action')
+- **phase** : Phase actuelle du workflow ('reflexion', 'regroupement', 'vote', ou 'action')
 - **users** : Liste des participants { userId: userName } pour prévenir l'usurpation d'identité
-- **positive** : Cartes des points positifs
-- **negative** : Cartes des points à améliorer
+- **positive** : Cartes des points positifs (avec groupId optionnel)
+- **negative** : Cartes des points à améliorer (avec groupId optionnel)
 - **action** : Cartes d'actions (OP uniquement)
 - **timer** : État du minuteur synchronisé
 
 ### Validation de la phase
 
 **phase** :
-- Doit être l'une des trois valeurs : 'reflexion', 'vote', ou 'action'
+- Doit être l'une des quatre valeurs : 'reflexion', 'regroupement', 'vote', ou 'action'
 - Contrôle le workflow de la rétrospective
 - Seul l'OP peut modifier cette valeur (validation côté application)
 - Synchronisé en temps réel pour tous les participants
@@ -101,10 +101,12 @@ Chaque session contient :
 - Content : max 200 caractères
 - Author : max 30 caractères
 - Votes : doit être un nombre
+- **groupId** : Optionnel, doit être une chaîne si présent (pour le regroupement de cartes)
 
 **Actions** :
 - Doivent contenir : id, content, author, timestamp
 - Pas de champ "votes" (les actions ne sont pas votables)
+- Pas de champ "groupId" (les actions ne peuvent pas être regroupées)
 - Content : max 200 caractères
 - Author : max 30 caractères
 
@@ -123,6 +125,9 @@ L'utilisateur qui crée la session devient automatiquement l'organisateur.
 
 **Droits exclusifs de l'OP** :
 - ✅ Ajouter/supprimer des actions
+- ✅ Regrouper/dégrouper des cartes (phase Regroupement)
+- ✅ Changer de phase (workflow)
+- ✅ Supprimer toutes les cartes en phase Vote
 - ✅ Contrôler le minuteur (démarrer/pause/arrêter)
 - ✅ Effacer toutes les données de la session
 - ✅ Exporter la rétrospective
@@ -131,12 +136,16 @@ L'utilisateur qui crée la session devient automatiquement l'organisateur.
 Les utilisateurs qui rejoignent une session existante.
 
 **Droits des participants** :
-- ✅ Ajouter/supprimer des points positifs et négatifs
-- ✅ Voter sur les points positifs et négatifs
+- ✅ Ajouter des points positifs et négatifs (phase Réflexion uniquement)
+- ✅ Supprimer leurs propres cartes (phase Réflexion uniquement)
+- ✅ Voter sur les points positifs, négatifs et groupes (phase Vote uniquement)
+- ✅ Voir les groupes de cartes créés par l'OP
 - ✅ Voir les actions (mais pas les modifier)
 - ✅ Voir le minuteur en temps réel (synchronisé)
 - ❌ Ne peuvent PAS ajouter/supprimer des actions
+- ❌ Ne peuvent PAS regrouper/dégrouper des cartes
 - ❌ Ne peuvent PAS voter sur les actions
+- ❌ Ne peuvent PAS supprimer de cartes en phase Regroupement ou Vote
 - ❌ Ne peuvent PAS contrôler le minuteur
 - ❌ Ne peuvent PAS effacer la session
 - ❌ Ne peuvent PAS exporter

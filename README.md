@@ -4,9 +4,10 @@ Application web collaborative pour rétrospectives agiles en temps réel, héber
 
 ## ✨ Fonctionnalités
 
-### Workflow en 3 phases
+### Workflow en 4 phases
 - 💭 **Phase Réflexion** : Chacun crée ses cartes de façon privée
-- 👍 **Phase Vote** : Toutes les cartes sont révélées, l'équipe vote pour prioriser
+- 📦 **Phase Regroupement** : L'OP regroupe les cartes similaires par drag & drop
+- 👍 **Phase Vote** : L'équipe vote pour prioriser les cartes et groupes
 - 🎯 **Phase Actions** : L'OP définit les actions à entreprendre
 
 ### Collaboration temps réel
@@ -120,24 +121,34 @@ Dans Firebase Console → Realtime Database → Règles :
 
 ### 🔄 Workflow de rétrospective
 
-L'application guide l'équipe à travers 3 phases distinctes :
+L'application guide l'équipe à travers 4 phases distinctes :
 
 #### Phase 1️⃣ : Réflexion (💭)
 - **Chaque participant crée ses cartes** positives et négatives
 - Les cartes sont **privées** : chacun voit uniquement **ses propres cartes**
 - Les votes sont **désactivés**
 - Les actions ne peuvent pas être créées
-- L'OP voit un bouton **"▶️ Révéler les cartes et passer au vote"**
+- L'OP voit un bouton **"▶️ Révéler les cartes et passer au regroupement"**
 
-#### Phase 2️⃣ : Vote (👍)
+#### Phase 2️⃣ : Regroupement (📦)
 - **TOUTES les cartes sont révélées** à tous les participants
-- Chaque participant peut **voter** (3 votes maximum)
+- Seul l'**OP peut regrouper** les cartes similaires par **drag & drop**
+- Les cartes regroupées affichent un **badge 📦** avec le nombre de cartes
+- Cliquez sur le badge pour voir le **détail du groupe**
+- L'OP peut **dégrouper** (↩️ pour une carte, 📤 pour tout le groupe)
+- Les votes et l'ajout de nouvelles cartes sont **bloqués**
+- L'OP voit un bouton **"▶️ Verrouiller les groupes et passer au vote"**
+
+#### Phase 3️⃣ : Vote (👍)
+- Les **groupes sont verrouillés** (plus de regroupement possible)
+- Chaque participant peut **voter** sur les cartes ou groupes (3 votes maximum)
+- Un vote sur un groupe compte comme **1 seul vote** sur la première carte
 - Les cartes sont **triées par nombre de votes**
 - **Animation visuelle** quand une carte change de position
-- L'ajout de nouvelles cartes positives/négatives est **bloqué**
+- Seul l'**OP peut supprimer** des cartes
 - L'OP voit un bouton **"▶️ Terminer les votes et passer aux actions"**
 
-#### Phase 3️⃣ : Actions (🎯)
+#### Phase 4️⃣ : Actions (🎯)
 - Les cartes et votes restent **visibles en lecture seule**
 - Les votes et suppressions de cartes pos/neg sont **bloqués**
 - Seul l'**OP peut créer des actions** pour définir les prochaines étapes
@@ -148,6 +159,7 @@ L'application guide l'équipe à travers 3 phases distinctes :
 **Organisateur (OP)** - Celui qui crée la session :
 - ✅ Contrôle le **workflow** (passer d'une phase à l'autre)
 - ✅ Toutes les actions des participants
+- ✅ **Regrouper/dégrouper** les cartes (phase Regroupement uniquement)
 - ✅ Ajouter/supprimer des **actions** (phase Actions uniquement)
 - ✅ Supprimer **toutes les cartes** selon la phase
 - ✅ Contrôler le **minuteur** (démarrer/arrêter)
@@ -156,10 +168,11 @@ L'application guide l'équipe à travers 3 phases distinctes :
 
 **Participants** - Ceux qui rejoignent la session :
 - ✅ Ajouter des points positifs et négatifs (phase Réflexion uniquement)
-- ✅ Supprimer **leurs propres cartes** (phases Réflexion et Vote uniquement)
-- ✅ Voter sur les points positifs et négatifs (phase Vote uniquement, **3 votes max**)
+- ✅ Supprimer **leurs propres cartes** (phase Réflexion uniquement)
+- ✅ Voir les **groupes de cartes** créés par l'OP (phase Regroupement et Vote)
+- ✅ Voter sur les points positifs, négatifs et groupes (phase Vote uniquement, **3 votes max**)
 - ✅ Voir les actions et le minuteur
-- ❌ Pas d'accès au contrôle de phase, actions, minuteur, export ou suppression générale
+- ❌ Pas d'accès au contrôle de phase, regroupement, actions, minuteur, export ou suppression en phase Vote
 
 ### Créer une session (Organisateur)
 
@@ -169,7 +182,7 @@ L'application guide l'équipe à travers 3 phases distinctes :
 4. **Votre nom est verrouillé** - impossible de le modifier pour éviter l'usurpation d'identité
 5. Partagez l'ID de session avec votre équipe (cliquez sur l'ID dans le bandeau pour le copier 📋)
 6. Vous verrez la liste des participants rejoindre en temps réel
-7. Le **stepper de phases** s'affiche en haut : 💭 Réflexion → 👍 Vote → 🎯 Actions
+7. Le **stepper de phases** s'affiche en haut : 💭 Réflexion → 📦 Regroupement → 👍 Vote → 🎯 Actions
 
 ### Rejoindre une session (Participant)
 
@@ -197,7 +210,7 @@ L'application guide l'équipe à travers 3 phases distinctes :
 1. Tapez votre commentaire (max 200 caractères)
 2. Appuyez sur Entrée ou cliquez sur "+"
 3. En phase Réflexion : **vos cartes restent privées**
-4. En phase Vote : toutes les cartes sont révélées
+4. En phase Regroupement et Vote : toutes les cartes sont révélées
 5. ⚠️ Après la phase Réflexion, **impossible d'ajouter de nouvelles cartes**
 
 **Actions** (OP uniquement, Phase Actions) :
@@ -205,23 +218,45 @@ L'application guide l'équipe à travers 3 phases distinctes :
 2. En phase Actions, seul l'OP peut ajouter des actions
 3. Les actions définissent les prochaines étapes
 
+### Regrouper des cartes (OP uniquement)
+
+**En phase Regroupement :**
+- Seul l'**OP peut regrouper** les cartes similaires
+- **Glisser-déposer** une carte sur une autre pour créer un groupe
+- Les cartes groupées affichent un **badge 📦** avec le nombre de cartes
+- **Cliquez sur le badge** pour voir le détail des cartes du groupe
+- **Dégrouper** : Bouton ↩️ sur une carte ou 📤 pour tout le groupe
+- Les groupes sont **verrouillés** en passant à la phase Vote
+
+**Affichage des groupes :**
+- La **première carte** du groupe est visible
+- Le **compteur de votes** affiche le total du groupe
+- Un vote sur le groupe incrémente uniquement la première carte
+
 ### Voter
 
 - **Disponible uniquement en Phase Vote**
-- Cliquez sur ⬆️ pour voter sur les **points positifs et négatifs**
+- Cliquez sur ⬆️ pour voter sur les **cartes individuelles ou groupes**
 - Chaque utilisateur dispose de **3 votes maximum**
 - Le compteur de votes restants s'affiche dans le bandeau supérieur
-- Les cartes sont **triées automatiquement** par nombre de votes
+- Les cartes/groupes sont **triées automatiquement** par nombre de votes
 - **Animation visuelle dorée** 🌟 quand une carte change de position après un vote
 - ⚠️ Les **actions ne peuvent pas être votées**
 - ⚠️ En phase Actions, les votes sont **désactivés** (lecture seule)
 
 ### Supprimer des cartes
 
-**En phase Réflexion et Vote :**
+**En phase Réflexion :**
 - **Participants** : Peuvent supprimer uniquement leurs propres cartes
 - **Organisateur (OP)** : Peut supprimer toutes les cartes
-- Le bouton 🗑️ n'apparaît que si vous avez le droit de supprimer
+
+**En phase Regroupement :**
+- **Organisateur (OP)** : Peut supprimer toutes les cartes
+- **Participants** : Ne peuvent pas supprimer de cartes
+
+**En phase Vote :**
+- Seul l'**Organisateur (OP)** peut supprimer des cartes
+- Le bouton 🗑️ n'apparaît que pour l'OP
 
 **En phase Actions :**
 - Les cartes positives/négatives ne peuvent **plus être supprimées**
