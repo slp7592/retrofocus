@@ -339,7 +339,7 @@
 - **Minuteur simplifié**
   - Bouton "Pause" supprimé (uniquement Démarrer/Stop)
   - Interface plus simple et intuitive
-  - Trois presets : 5, 7 et 10 minutes
+  - Trois presets
 
 #### 🔧 Améliorations techniques
 
