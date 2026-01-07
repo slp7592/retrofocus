@@ -146,14 +146,18 @@ export function renderCards(container, items, type, handlers) {
                 <div class="card-group-badge" onclick="showGroupDetail('${type}', '${item.groupId}')">
                     📦 ${item.cards.length}
                 </div>
+                ${isGroupingPhase && canGroup ? `
+                    <button class="card-ungroup-all-btn" data-action="ungroup-all" data-type="${type}" data-group-id="${item.groupId}" title="Dégrouper tout">📤</button>
+                ` : ''}
                 <div class="card-content">${escapeHtml(firstCard.content)}</div>
                 <div class="card-footer">
                     <span class="card-author">${escapeHtml(firstCard.author)} +${item.cards.length - 1}</span>
                     <div class="card-actions">
                         ${hasVotingSystem ? `
-                            <div class="votes">👍 ${item.votes || 0}</div>
-                            ${canVote ? `<button class="card-btn" data-action="vote" data-type="${type}" data-key="${firstCard.key}" data-votes="${item.votes}" data-is-group="true" data-group-id="${item.groupId}">⬆️</button>` : ''}
+                            <div class="votes">👍 ${firstCard.votes || 0}</div>
+                            ${canVote ? `<button class="card-btn" data-action="vote" data-type="${type}" data-key="${firstCard.key}" data-votes="${firstCard.votes || 0}">⬆️</button>` : ''}
                         ` : ''}
+                        <span class="card-btn-placeholder"></span>
                     </div>
                 </div>
             </div>
@@ -229,6 +233,14 @@ export function renderCards(container, items, type, handlers) {
             btn.addEventListener('click', () => {
                 if (handlers.onUngroup) {
                     handlers.onUngroup(btn.dataset.type, btn.dataset.key);
+                }
+            });
+        });
+
+        container.querySelectorAll('[data-action="ungroup-all"]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (handlers.onUngroupAll) {
+                    handlers.onUngroupAll(btn.dataset.type, btn.dataset.groupId);
                 }
             });
         });
@@ -354,7 +366,6 @@ export function showGroupDetailModal(cards) {
                 <div class="group-detail-text">${escapeHtml(card.content)}</div>
                 <div class="group-detail-author">par ${escapeHtml(card.author)}</div>
             </div>
-            <div class="group-detail-votes">👍 ${card.votes || 0}</div>
         </div>
     `).join('');
 

@@ -268,6 +268,7 @@ function renderCardsForType(type, cards) {
         onDelete: handleDeleteCard,
         onGroup: handleGroupCards,
         onUngroup: handleUngroupCard,
+        onUngroupAll: handleUngroupAll,
         canDelete: canDeleteCard,
         canVote: canVoteOnCards,
         canGroup: canGroupCards,
@@ -405,7 +406,6 @@ async function handleVoteCard(type, key, currentVotes, isGroup = false, groupId 
 async function handleGroupCards(type, draggedCardKey, targetCardKey) {
     try {
         await Cards.groupCards(type, draggedCardKey, targetCardKey);
-        await UI.showSuccess('Cartes regroupées avec succès !');
     } catch (error) {
         await UI.showError(error.message);
     }
@@ -418,6 +418,18 @@ async function handleUngroupCard(type, cardKey) {
     try {
         await Cards.ungroupCard(type, cardKey);
         await UI.showSuccess('Carte retirée du groupe !');
+    } catch (error) {
+        await UI.showError(error.message);
+    }
+}
+
+/**
+ * Gère le dégroupement de toutes les cartes d'un groupe
+ */
+async function handleUngroupAll(type, groupId) {
+    try {
+        await Cards.ungroupAll(type, groupId);
+        await UI.showSuccess('Groupe dégroupé avec succès !');
     } catch (error) {
         await UI.showError(error.message);
     }

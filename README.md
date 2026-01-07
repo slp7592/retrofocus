@@ -66,30 +66,48 @@ Dans Firebase Console → Realtime Database → Règles :
       "$sessionId": {
         ".read": true,
         ".write": true,
+
         "owner": {
           ".validate": "newData.isString() && newData.val().length > 0"
         },
+
         "phase": {
-          ".validate": "newData.isString() && (newData.val() === 'reflexion' || newData.val() === 'vote' || newData.val() === 'action')"
+          ".validate": "newData.isString() && (newData.val() === 'reflexion' || newData.val() === 'regroupement' || newData.val() === 'vote' || newData.val() === 'action')"
         },
+
         "users": {
           "$userId": {
             ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 30"
           }
         },
+
         "positive": {
           "$cardId": {
-            ".validate": "newData.hasChildren(['id', 'content', 'author', 'votes', 'timestamp']) && newData.child('content').val().length <= 200 && newData.child('author').val().length <= 30"
+            ".validate": "newData.hasChildren(['id', 'content', 'author', 'votes', 'timestamp']) && newData.child('content').val().length <= 200 && newData.child('author').val().length <= 30 && newData.child('votes').isNumber() && (!newData.child('groupId').exists() || newData.child('groupId').isString())"
           }
         },
+
         "negative": {
           "$cardId": {
-            ".validate": "newData.hasChildren(['id', 'content', 'author', 'votes', 'timestamp']) && newData.child('content').val().length <= 200 && newData.child('author').val().length <= 30"
+            ".validate": "newData.hasChildren(['id', 'content', 'author', 'votes', 'timestamp']) && newData.child('content').val().length <= 200 && newData.child('author').val().length <= 30 && newData.child('votes').isNumber() && (!newData.child('groupId').exists() || newData.child('groupId').isString())"
           }
         },
+
         "action": {
           "$cardId": {
             ".validate": "newData.hasChildren(['id', 'content', 'author', 'timestamp']) && newData.child('content').val().length <= 200 && newData.child('author').val().length <= 30"
+          }
+        },
+
+        "timer": {
+          "timeRemaining": {
+            ".validate": "newData.isNumber() && newData.val() >= 0"
+          },
+          "isRunning": {
+            ".validate": "newData.isBoolean()"
+          },
+          "lastUpdate": {
+            ".validate": "newData.isNumber()"
           }
         }
       }
@@ -291,16 +309,6 @@ Les contributions sont bienvenues ! N'hésitez pas à :
 - Proposer des fonctionnalités
 - Soumettre des pull requests
 
-## 💡 Idées futures
-
-- [ ] Mode sombre
-- [ ] Templates de rétrospectives (Start/Stop/Continue, etc.)
-- [ ] Authentification utilisateur
-- [ ] Historique des sessions
-- [ ] Notifications temps réel
-- [ ] PWA (Progressive Web App)
-- [ ] Export PDF
-- [ ] Réactions emoji sur les cartes
 
 ---
 

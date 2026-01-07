@@ -155,32 +155,9 @@ export async function voteCard(type, key, currentVotes = 0, isGroup = false, gro
     }
 
     try {
-        if (isGroup && groupId) {
-            // Vote sur un groupe : incrémenter tous les votes des cartes du groupe
-            const typeRef = ref(db, `sessions/${sessionId}/${type}`);
-
-            // Récupérer toutes les cartes du type
-            const snapshot = await new Promise((resolve) =>
-                onValue(typeRef, resolve, { onlyOnce: true })
-            );
-
-            const data = snapshot.val() || {};
-            const updates = {};
-
-            // Trouver toutes les cartes du groupe et préparer les mises à jour
-            Object.entries(data).forEach(([cardKey, card]) => {
-                if (card.groupId === groupId) {
-                    updates[`${cardKey}/votes`] = (card.votes || 0) + 1;
-                }
-            });
-
-            // Appliquer toutes les mises à jour en une seule opération
-            await update(typeRef, updates);
-        } else {
-            // Vote sur une carte individuelle
-            const cardRef = ref(db, `sessions/${sessionId}/${type}/${key}`);
-            await update(cardRef, { votes: currentVotes + 1 });
-        }
+        // Vote sur une carte individuelle (même si c'est un groupe, on vote sur la première carte)
+        const cardRef = ref(db, `sessions/${sessionId}/${type}/${key}`);
+        await update(cardRef, { votes: currentVotes + 1 });
 
         incrementVotesUsed();
         return currentVotes + 1;
@@ -280,6 +257,51 @@ export async function ungroupCard(type, cardKey) {
 
     try {
         await update(cardRef, { groupId: null });
+        return true;
+    } catch (error) {
+        console.error('Erreur lors du dégroupement:', error);
+        throw error;
+    }
+}
+
+/**
+ * Dégrouper toutes les cartes d'un groupe
+ */
+export async function ungroupAll(type, groupId) {
+    const sessionId = getCurrentSessionId();
+    if (!sessionId) {
+        throw new Error('Aucune session active');
+    }
+
+    if (!isSessionOwner()) {
+        throw new Error('Seul l\'organisateur peut dégrouper des cartes');
+    }
+
+    const currentPhase = getCurrentPhase();
+    if (currentPhase !== 'regroupement') {
+        throw new Error('Le dégroupement n\'est possible qu\'en phase Regroupement');
+    }
+
+    const typeRef = ref(db, `sessions/${sessionId}/${type}`);
+
+    try {
+        // Récupérer toutes les cartes du type
+        const snapshot = await new Promise((resolve) =>
+            onValue(typeRef, resolve, { onlyOnce: true })
+        );
+
+        const data = snapshot.val() || {};
+        const updates = {};
+
+        // Trouver toutes les cartes du groupe et préparer les mises à jour
+        Object.entries(data).forEach(([cardKey, card]) => {
+            if (card.groupId === groupId) {
+                updates[`${cardKey}/groupId`] = null;
+            }
+        });
+
+        // Appliquer toutes les mises à jour en une seule opération
+        await update(typeRef, updates);
         return true;
     } catch (error) {
         console.error('Erreur lors du dégroupement:', error);
