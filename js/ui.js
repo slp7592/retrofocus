@@ -100,9 +100,9 @@ export function showConfirm(message) {
 const previousCardsOrder = {};
 
 /**
- * Rend les cartes dans un conteneur
+ * Rend les cartes dans un conteneur (avec support des groupes)
  */
-export function renderCards(container, cards, type, handlers) {
+export function renderCards(container, items, type, handlers) {
     if (!container) return;
 
     // Les actions n'ont pas de système de vote
@@ -111,48 +111,90 @@ export function renderCards(container, cards, type, handlers) {
     // Afficher le bouton de vote uniquement si on peut voter
     const canVote = hasVotingSystem && (!handlers.canVote || handlers.canVote());
 
-    // Détecter les cartes qui ont changé de position
-    const previousOrder = previousCardsOrder[type] || [];
-    const movedCards = new Set();
+    // Déterminer si on est en phase de regroupement
+    const isGroupingPhase = handlers.isGroupingPhase ? handlers.isGroupingPhase() : false;
+    const canGroup = handlers.canGroup ? handlers.canGroup() : false;
 
-    cards.forEach((card, newIndex) => {
-        const oldIndex = previousOrder.indexOf(card.key);
+    // Détecter les cartes/groupes qui ont changé de position
+    const previousOrder = previousCardsOrder[type] || [];
+    const movedItems = new Set();
+
+    items.forEach((item, newIndex) => {
+        const itemId = item.isGroup ? item.groupId : item.key;
+        const oldIndex = previousOrder.indexOf(itemId);
         if (oldIndex !== -1 && oldIndex !== newIndex) {
-            movedCards.add(card.key);
+            movedItems.add(itemId);
         }
     });
 
     // Stocker le nouvel ordre
-    previousCardsOrder[type] = cards.map(c => c.key);
+    previousCardsOrder[type] = items.map(item => item.isGroup ? item.groupId : item.key);
 
-    container.innerHTML = cards.map(card => {
-        // Déterminer si l'utilisateur peut supprimer cette carte
-        const canDelete = handlers.canDelete ? handlers.canDelete(card, type) : true;
+    container.innerHTML = items.map(item => {
+        if (item.isGroup) {
+            // Rendu d'un groupe de cartes
+            const firstCard = item.cards[0];
+            const itemId = item.groupId;
+            const cardClass = movedItems.has(itemId) ? 'card card-group card-moved' : 'card card-group';
 
-        // Ajouter la classe d'animation si la carte a bougé
-        const cardClass = movedCards.has(card.key) ? 'card card-moved' : 'card';
-
-        return `
-        <div class="${cardClass}" data-card-key="${card.key}">
-            <div class="card-content">${escapeHtml(card.content)}</div>
-            <div class="card-footer">
-                <span class="card-author">${escapeHtml(card.author)}</span>
-                <div class="card-actions">
-                    ${hasVotingSystem ? `
-                        <div class="votes">👍 ${card.votes || 0}</div>
-                        ${canVote ? `<button class="card-btn" data-action="vote" data-type="${type}" data-key="${card.key}" data-votes="${card.votes || 0}">⬆️</button>` : ''}
-                    ` : ''}
-                    ${canDelete
-                        ? `<button class="card-btn" data-action="delete" data-type="${type}" data-key="${card.key}" data-author="${escapeHtml(card.author)}">🗑️</button>`
-                        : `<span class="card-btn-placeholder"></span>`
-                    }
+            return `
+            <div class="${cardClass}"
+                 data-card-key="${firstCard.key}"
+                 data-group-id="${item.groupId}"
+                 data-is-group="true"
+                 ${canGroup ? 'draggable="false"' : ''}>
+                <div class="card-group-badge" onclick="showGroupDetail('${type}', '${item.groupId}')">
+                    📦 ${item.cards.length}
+                </div>
+                <div class="card-content">${escapeHtml(firstCard.content)}</div>
+                <div class="card-footer">
+                    <span class="card-author">${escapeHtml(firstCard.author)} +${item.cards.length - 1}</span>
+                    <div class="card-actions">
+                        ${hasVotingSystem ? `
+                            <div class="votes">👍 ${item.votes || 0}</div>
+                            ${canVote ? `<button class="card-btn" data-action="vote" data-type="${type}" data-key="${firstCard.key}" data-votes="${item.votes}" data-is-group="true" data-group-id="${item.groupId}">⬆️</button>` : ''}
+                        ` : ''}
+                    </div>
                 </div>
             </div>
-        </div>
-    `;
+            `;
+        } else {
+            // Rendu d'une carte individuelle
+            const canDelete = handlers.canDelete ? handlers.canDelete(item, type) : true;
+            const itemId = item.key;
+            const cardClass = movedItems.has(itemId) ? 'card card-moved' : 'card';
+            const dragAttr = canGroup && !item.groupId ? 'draggable="true"' : '';
+            const dropZoneAttr = canGroup ? 'data-drop-zone="true"' : '';
+
+            return `
+            <div class="${cardClass}"
+                 data-card-key="${item.key}"
+                 data-is-group="false"
+                 ${dragAttr}
+                 ${dropZoneAttr}>
+                ${item.groupId && isGroupingPhase && canGroup ? `
+                    <button class="card-ungroup-btn" data-action="ungroup" data-type="${type}" data-key="${item.key}" title="Retirer du groupe">↩️</button>
+                ` : ''}
+                <div class="card-content">${escapeHtml(item.content)}</div>
+                <div class="card-footer">
+                    <span class="card-author">${escapeHtml(item.author)}</span>
+                    <div class="card-actions">
+                        ${hasVotingSystem ? `
+                            <div class="votes">👍 ${item.votes || 0}</div>
+                            ${canVote ? `<button class="card-btn" data-action="vote" data-type="${type}" data-key="${item.key}" data-votes="${item.votes || 0}">⬆️</button>` : ''}
+                        ` : ''}
+                        ${canDelete
+                            ? `<button class="card-btn" data-action="delete" data-type="${type}" data-key="${item.key}" data-author="${escapeHtml(item.author)}">🗑️</button>`
+                            : `<span class="card-btn-placeholder"></span>`
+                        }
+                    </div>
+                </div>
+            </div>
+            `;
+        }
     }).join('');
 
-    // Retirer la classe d'animation après son exécution pour permettre de futures animations
+    // Retirer la classe d'animation après son exécution
     setTimeout(() => {
         container.querySelectorAll('.card-moved').forEach(card => {
             card.classList.remove('card-moved');
@@ -164,10 +206,14 @@ export function renderCards(container, cards, type, handlers) {
         if (canVote) {
             container.querySelectorAll('[data-action="vote"]').forEach(btn => {
                 btn.addEventListener('click', () => {
+                    const isGroup = btn.dataset.isGroup === 'true';
+                    const groupId = btn.dataset.groupId || null;
                     handlers.onVote(
                         btn.dataset.type,
                         btn.dataset.key,
-                        parseInt(btn.dataset.votes)
+                        parseInt(btn.dataset.votes),
+                        isGroup,
+                        groupId
                     );
                 });
             });
@@ -178,7 +224,141 @@ export function renderCards(container, cards, type, handlers) {
                 handlers.onDelete(btn.dataset.type, btn.dataset.key, btn.dataset.author);
             });
         });
+
+        container.querySelectorAll('[data-action="ungroup"]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (handlers.onUngroup) {
+                    handlers.onUngroup(btn.dataset.type, btn.dataset.key);
+                }
+            });
+        });
+
+        // Configurer le drag & drop si en phase de regroupement
+        if (canGroup) {
+            setupDragAndDrop(container, type, handlers);
+        }
     }
+}
+
+/**
+ * Configure le système de drag & drop pour le regroupement
+ */
+function setupDragAndDrop(container, type, handlers) {
+    let draggedElement = null;
+
+    // Gérer le début du drag
+    container.querySelectorAll('[draggable="true"]').forEach(card => {
+        card.addEventListener('dragstart', (e) => {
+            draggedElement = e.target;
+            e.target.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', e.target.innerHTML);
+        });
+
+        card.addEventListener('dragend', (e) => {
+            e.target.classList.remove('dragging');
+            // Retirer tous les highlights
+            container.querySelectorAll('.drop-target').forEach(el => {
+                el.classList.remove('drop-target');
+            });
+            draggedElement = null;
+        });
+    });
+
+    // Gérer le drop sur les zones valides
+    container.querySelectorAll('[data-drop-zone="true"]').forEach(dropZone => {
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+
+            // Highlight la zone de dépôt
+            if (draggedElement && dropZone !== draggedElement) {
+                dropZone.classList.add('drop-target');
+            }
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('drop-target');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            dropZone.classList.remove('drop-target');
+
+            if (!draggedElement || dropZone === draggedElement) {
+                return;
+            }
+
+            const draggedKey = draggedElement.dataset.cardKey;
+            const targetKey = dropZone.dataset.cardKey;
+
+            if (draggedKey && targetKey && handlers.onGroup) {
+                handlers.onGroup(type, draggedKey, targetKey);
+            }
+        });
+    });
+
+    // Permettre le drop sur les groupes
+    container.querySelectorAll('[data-is-group="true"]').forEach(group => {
+        group.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+
+            if (draggedElement) {
+                group.classList.add('drop-target');
+            }
+        });
+
+        group.addEventListener('dragleave', () => {
+            group.classList.remove('drop-target');
+        });
+
+        group.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            group.classList.remove('drop-target');
+
+            if (!draggedElement) {
+                return;
+            }
+
+            const draggedKey = draggedElement.dataset.cardKey;
+            const targetKey = group.dataset.cardKey;
+
+            if (draggedKey && targetKey && handlers.onGroup) {
+                handlers.onGroup(type, draggedKey, targetKey);
+            }
+        });
+    });
+}
+
+/**
+ * Affiche la modal de détail d'un groupe
+ */
+export function showGroupDetailModal(cards) {
+    const modal = document.getElementById('groupDetailModal');
+    const title = document.getElementById('groupDetailTitle');
+    const content = document.getElementById('groupDetailContent');
+
+    if (!modal || !title || !content) return;
+
+    title.textContent = `Groupe de ${cards.length} cartes`;
+
+    content.innerHTML = cards.map((card, index) => `
+        <div class="group-detail-card">
+            <div class="group-detail-number">#${index + 1}</div>
+            <div class="group-detail-content">
+                <div class="group-detail-text">${escapeHtml(card.content)}</div>
+                <div class="group-detail-author">par ${escapeHtml(card.author)}</div>
+            </div>
+            <div class="group-detail-votes">👍 ${card.votes || 0}</div>
+        </div>
+    `).join('');
+
+    modal.style.display = 'flex';
 }
 
 /**

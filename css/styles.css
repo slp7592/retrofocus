@@ -759,6 +759,138 @@ input[type="text"]:focus {
     }
 }
 
+/* Styles pour les groupes de cartes */
+.card-group {
+    position: relative;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+}
+
+.card-group-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #667eea;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(102, 126, 234, 0.4);
+    transition: transform 0.2s;
+    z-index: 10;
+}
+
+.card-group-badge:hover {
+    transform: scale(1.1);
+    background: #5568d3;
+}
+
+/* Styles pour le drag & drop */
+.card[draggable="true"] {
+    cursor: move;
+    user-select: none;
+}
+
+.card.dragging {
+    opacity: 0.5;
+    transform: scale(0.95);
+}
+
+.card.drop-target {
+    border: 3px dashed #667eea;
+    background: #f0f4ff;
+    transform: scale(1.02);
+}
+
+/* Bouton de dégroupement */
+.card-ungroup-btn {
+    position: absolute;
+    top: -8px;
+    left: -8px;
+    background: #f56565;
+    color: white;
+    border: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(245, 101, 101, 0.4);
+    transition: all 0.2s;
+    z-index: 10;
+}
+
+.card-ungroup-btn:hover {
+    transform: scale(1.1);
+    background: #e53e3e;
+}
+
+/* Modal de détail des groupes */
+.group-detail-modal {
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.group-detail-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.group-detail-card {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: #f7fafc;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid #667eea;
+}
+
+.group-detail-number {
+    background: #667eea;
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.group-detail-content {
+    flex: 1;
+}
+
+.group-detail-text {
+    color: #2d3748;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.group-detail-author {
+    color: #718096;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.group-detail-votes {
+    background: white;
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
 @media (max-width: 768px) {
     .columns {
         grid-template-columns: 1fr;
@@ -810,5 +942,14 @@ input[type="text"]:focus {
 
     .logo-banner {
         max-width: 200px;
+    }
+
+    .group-detail-card {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .group-detail-votes {
+        align-self: flex-end;
     }
 }

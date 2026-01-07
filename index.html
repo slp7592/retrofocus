@@ -72,7 +72,7 @@
         },
 
         "phase": {
-          ".validate": "newData.isString() && (newData.val() === 'reflexion' || newData.val() === 'vote' || newData.val() === 'action')"
+          ".validate": "newData.isString() && (newData.val() === 'reflexion' || newData.val() === 'regroupement' || newData.val() === 'vote' || newData.val() === 'action')"
         },
 
         "users": {
@@ -83,13 +83,13 @@
 
         "positive": {
           "$cardId": {
-            ".validate": "newData.hasChildren(['id', 'content', 'author', 'votes', 'timestamp']) && newData.child('content').val().length <= 200 && newData.child('author').val().length <= 30 && newData.child('votes').isNumber()"
+            ".validate": "newData.hasChildren(['id', 'content', 'author', 'votes', 'timestamp']) && newData.child('content').val().length <= 200 && newData.child('author').val().length <= 30 && newData.child('votes').isNumber() && (!newData.child('groupId').exists() || newData.child('groupId').isString())"
           }
         },
 
         "negative": {
           "$cardId": {
-            ".validate": "newData.hasChildren(['id', 'content', 'author', 'votes', 'timestamp']) && newData.child('content').val().length <= 200 && newData.child('author').val().length <= 30 && newData.child('votes').isNumber()"
+            ".validate": "newData.hasChildren(['id', 'content', 'author', 'votes', 'timestamp']) && newData.child('content').val().length <= 200 && newData.child('author').val().length <= 30 && newData.child('votes').isNumber() && (!newData.child('groupId').exists() || newData.child('groupId').isString())"
           }
         },
 
@@ -132,8 +132,8 @@
                             <div id="headerSessionId" style="display: none; color: #667eea; font-weight: 600; font-size: 14px; cursor: pointer;" onclick="copySessionIdToClipboard()" title="Cliquer pour copier l'ID de session">
                                 Session: <span id="headerSessionIdText"></span>
                             </div>
-                            <div id="headerTimerDisplay" style="display: none; color: #718096; font-size: 14px; margin-top: 5px;">
-                                ⏱️ <span id="headerTimerText">5:00</span>
+                            <div id="headerTimerDisplay" style="display: none; color: #718096; font-size: 18px; margin-top: 5px;">
+                                ⏱️ <span id="headerTimerText">05:00</span>
                             </div>
                         </div>
                     </div>
@@ -156,6 +156,11 @@
                 <div class="phase-step" data-phase="reflexion">
                     <div class="phase-step-icon">💭</div>
                     <div class="phase-step-label">Réflexion</div>
+                </div>
+                <div class="phase-step-connector"></div>
+                <div class="phase-step" data-phase="regroupement">
+                    <div class="phase-step-icon">📦</div>
+                    <div class="phase-step-label">Regroupement</div>
                 </div>
                 <div class="phase-step-connector"></div>
                 <div class="phase-step" data-phase="vote">
@@ -260,6 +265,16 @@
             <div class="custom-modal-icon" id="modalIcon"></div>
             <div class="custom-modal-message" id="modalMessage"></div>
             <div class="custom-modal-buttons" id="modalButtons"></div>
+        </div>
+    </div>
+
+    <!-- Modal de détail des cartes groupées -->
+    <div id="groupDetailModal" class="custom-modal" style="display: none;">
+        <div class="custom-modal-overlay" onclick="closeGroupDetailModal()"></div>
+        <div class="custom-modal-content group-detail-modal">
+            <h3 id="groupDetailTitle" style="color: #667eea; margin-bottom: 20px;">Cartes du groupe</h3>
+            <div id="groupDetailContent" class="group-detail-list"></div>
+            <button class="btn btn-primary" onclick="closeGroupDetailModal()" style="width: 100%; margin-top: 20px;">Fermer</button>
         </div>
     </div>
 

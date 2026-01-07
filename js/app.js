@@ -229,9 +229,22 @@ function canDeleteCard(card, type) {
  * Détermine si les votes sont possibles
  */
 function canVoteOnCards() {
-    const currentPhase = Session.getCurrentPhase();
     // Les votes ne sont possibles qu'en phase Vote
-    return currentPhase === 'vote';
+    return Session.getCurrentPhase() === 'vote';
+}
+
+/**
+ * Détermine si le regroupement est possible
+ */
+function canGroupCards() {
+    return Session.getCurrentPhase() === 'regroupement' && Session.isSessionOwner();
+}
+
+/**
+ * Détermine si on est en phase de regroupement
+ */
+function isGroupingPhase() {
+    return Session.getCurrentPhase() === 'regroupement';
 }
 
 // Stockage des cartes brutes (avant filtrage) pour pouvoir forcer un refresh
@@ -244,11 +257,21 @@ function renderCardsForType(type, cards) {
     const containerId = `cards${UI.capitalize(type)}`;
     const container = document.getElementById(containerId);
 
-    UI.renderCards(container, cards, type, {
+    // Organiser les cartes en groupes si nécessaire
+    const currentPhase = Session.getCurrentPhase();
+    const shouldOrganizeGroups = (currentPhase === 'regroupement' || currentPhase === 'vote' || currentPhase === 'action') && type !== 'action';
+
+    const items = shouldOrganizeGroups ? Cards.organizeCardsIntoGroups(cards) : cards.map(card => ({ isGroup: false, ...card }));
+
+    UI.renderCards(container, items, type, {
         onVote: handleVoteCard,
         onDelete: handleDeleteCard,
+        onGroup: handleGroupCards,
+        onUngroup: handleUngroupCard,
         canDelete: canDeleteCard,
-        canVote: canVoteOnCards
+        canVote: canVoteOnCards,
+        canGroup: canGroupCards,
+        isGroupingPhase: isGroupingPhase
     });
 }
 
@@ -364,13 +387,37 @@ async function handleAddCard(type) {
 }
 
 /**
- * Gère le vote d'une carte
+ * Gère le vote d'une carte ou d'un groupe
  */
 window.voteCard = handleVoteCard;
-async function handleVoteCard(type, key, currentVotes) {
+async function handleVoteCard(type, key, currentVotes, isGroup = false, groupId = null) {
     try {
-        await Cards.voteCard(type, key, currentVotes);
+        await Cards.voteCard(type, key, currentVotes, isGroup, groupId);
         updateVoteDisplay();
+    } catch (error) {
+        await UI.showError(error.message);
+    }
+}
+
+/**
+ * Gère le regroupement de cartes
+ */
+async function handleGroupCards(type, draggedCardKey, targetCardKey) {
+    try {
+        await Cards.groupCards(type, draggedCardKey, targetCardKey);
+        await UI.showSuccess('Cartes regroupées avec succès !');
+    } catch (error) {
+        await UI.showError(error.message);
+    }
+}
+
+/**
+ * Gère le dégroupement d'une carte
+ */
+async function handleUngroupCard(type, cardKey) {
+    try {
+        await Cards.ungroupCard(type, cardKey);
+        await UI.showSuccess('Carte retirée du groupe !');
     } catch (error) {
         await UI.showError(error.message);
     }
@@ -611,7 +658,7 @@ function updatePhaseUI(phase) {
 
     // Mettre à jour les classes des étapes
     const steps = document.querySelectorAll('.phase-step');
-    const phases = ['reflexion', 'vote', 'action'];
+    const phases = ['reflexion', 'regroupement', 'vote', 'action'];
     const currentPhaseIndex = phases.indexOf(phase);
 
     steps.forEach((step, index) => {
@@ -626,7 +673,10 @@ function updatePhaseUI(phase) {
     // Afficher le bouton pour passer à la phase suivante (OP uniquement)
     if (Session.isSessionOwner() && phaseControls && nextPhaseBtn) {
         if (phase === 'reflexion') {
-            nextPhaseBtn.textContent = '▶️ Révéler les cartes et passer au vote';
+            nextPhaseBtn.textContent = '▶️ Révéler les cartes et passer au regroupement';
+            phaseControls.style.display = 'block';
+        } else if (phase === 'regroupement') {
+            nextPhaseBtn.textContent = '▶️ Verrouiller les groupes et passer au vote';
             phaseControls.style.display = 'block';
         } else if (phase === 'vote') {
             nextPhaseBtn.textContent = '▶️ Terminer les votes et passer aux actions';
@@ -655,6 +705,8 @@ window.nextPhase = async function() {
         let nextPhase;
 
         if (currentPhase === 'reflexion') {
+            nextPhase = 'regroupement';
+        } else if (currentPhase === 'regroupement') {
             nextPhase = 'vote';
         } else if (currentPhase === 'vote') {
             nextPhase = 'action';
@@ -712,6 +764,38 @@ window.resetTimer = async function() {
         return;
     }
     Timer.stop();
+};
+
+/**
+ * Affiche le détail d'un groupe de cartes
+ */
+window.showGroupDetail = function(type, groupId) {
+    // Récupérer les cartes brutes du type
+    const rawCards = rawCardsStorage[type];
+    if (!rawCards) {
+        console.error('Aucune carte disponible pour ce type');
+        return;
+    }
+
+    // Filtrer les cartes du groupe
+    const groupCards = Cards.getCardsInGroup(rawCards, groupId);
+    if (groupCards.length === 0) {
+        console.error('Aucune carte trouvée dans ce groupe');
+        return;
+    }
+
+    // Afficher la modal
+    UI.showGroupDetailModal(groupCards);
+};
+
+/**
+ * Ferme la modal de détail de groupe
+ */
+window.closeGroupDetailModal = function() {
+    const modal = document.getElementById('groupDetailModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
 };
 
 // Initialiser l'application au chargement

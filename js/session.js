@@ -375,7 +375,7 @@ export async function setPhase(newPhase) {
         throw new Error('Aucune session active');
     }
 
-    const validPhases = ['reflexion', 'vote', 'action'];
+    const validPhases = ['reflexion', 'regroupement', 'vote', 'action'];
     if (!validPhases.includes(newPhase)) {
         throw new Error('Phase invalide');
     }
