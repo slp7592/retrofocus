@@ -5,6 +5,7 @@
 let timerInterval = null;
 let timeRemaining = 0;
 let displayElement = null;
+let headerDisplayElement = null;
 let updateCallback = null;
 let notificationCallback = null;
 
@@ -13,6 +14,7 @@ let notificationCallback = null;
  */
 export function initialize(element, onUpdate = null, onTimerEnd = null) {
     displayElement = element;
+    headerDisplayElement = document.getElementById('headerTimerText');
     updateCallback = onUpdate;
     notificationCallback = onTimerEnd;
     updateDisplay();
@@ -128,15 +130,21 @@ export function syncFromFirebase(timerData) {
 function updateDisplay(customText = null) {
     if (!displayElement) return;
 
+    let timeText;
     if (customText) {
-        displayElement.textContent = customText;
-        return;
+        timeText = customText;
+    } else {
+        const minutes = Math.floor(timeRemaining / 60);
+        const seconds = timeRemaining % 60;
+        timeText = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
     }
 
-    const minutes = Math.floor(timeRemaining / 60);
-    const seconds = timeRemaining % 60;
-    displayElement.textContent =
-        `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    displayElement.textContent = timeText;
+
+    // Mettre à jour aussi l'affichage dans le header
+    if (headerDisplayElement) {
+        headerDisplayElement.textContent = timeText;
+    }
 }
 
 /**

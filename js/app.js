@@ -459,8 +459,7 @@ function updateUIPermissions() {
     // Boutons et éléments réservés à l'OP
     const ownerElements = [
         document.getElementById('clearAllBtn'),
-        document.querySelector('.export-section'),
-        document.querySelector('.timer-controls')
+        document.querySelector('.timer') // Masquer toute la section timer pour les non-OP
     ];
 
     ownerElements.forEach(el => {
@@ -468,6 +467,12 @@ function updateUIPermissions() {
             el.style.display = isOwner ? '' : 'none';
         }
     });
+
+    // Afficher le timer dans le header pour tout le monde quand une session est active
+    const headerTimerDisplay = document.getElementById('headerTimerDisplay');
+    if (headerTimerDisplay && Session.getCurrentSessionId()) {
+        headerTimerDisplay.style.display = 'block';
+    }
 
     // Input et bouton pour les actions
     const actionInput = document.getElementById('inputAction');

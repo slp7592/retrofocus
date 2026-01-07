@@ -66,24 +66,48 @@
       "$sessionId": {
         ".read": true,
         ".write": true,
+
+        "owner": {
+          ".validate": "newData.isString() && newData.val().length > 0"
+        },
+
+        "phase": {
+          ".validate": "newData.isString() && (newData.val() === 'reflexion' || newData.val() === 'vote' || newData.val() === 'action')"
+        },
+
         "users": {
           "$userId": {
             ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 30"
           }
         },
+
         "positive": {
           "$cardId": {
-            ".validate": "newData.hasChildren(['id', 'content', 'author', 'votes', 'timestamp']) && newData.child('content').val().length <= 200 && newData.child('author').val().length <= 30"
+            ".validate": "newData.hasChildren(['id', 'content', 'author', 'votes', 'timestamp']) && newData.child('content').val().length <= 200 && newData.child('author').val().length <= 30 && newData.child('votes').isNumber()"
           }
         },
+
         "negative": {
           "$cardId": {
-            ".validate": "newData.hasChildren(['id', 'content', 'author', 'votes', 'timestamp']) && newData.child('content').val().length <= 200 && newData.child('author').val().length <= 30"
+            ".validate": "newData.hasChildren(['id', 'content', 'author', 'votes', 'timestamp']) && newData.child('content').val().length <= 200 && newData.child('author').val().length <= 30 && newData.child('votes').isNumber()"
           }
         },
+
         "action": {
           "$cardId": {
-            ".validate": "newData.hasChildren(['id', 'content', 'author', 'votes', 'timestamp']) && newData.child('content').val().length <= 200 && newData.child('author').val().length <= 30"
+            ".validate": "newData.hasChildren(['id', 'content', 'author', 'timestamp']) && newData.child('content').val().length <= 200 && newData.child('author').val().length <= 30"
+          }
+        },
+
+        "timer": {
+          "timeRemaining": {
+            ".validate": "newData.isNumber() && newData.val() >= 0"
+          },
+          "isRunning": {
+            ".validate": "newData.isBoolean()"
+          },
+          "lastUpdate": {
+            ".validate": "newData.isNumber()"
           }
         }
       }
@@ -102,9 +126,16 @@
         <div class="app-layout">
             <div class="main-content">
                 <header>
-                    <img src="retrofocus.png" alt="Retrofocus" class="logo-banner">
-                    <div id="headerSessionId" style="display: none; color: #667eea; font-weight: 600; font-size: 14px; cursor: pointer;" onclick="copySessionIdToClipboard()" title="Cliquer pour copier l'ID de session">
-                        Session: <span id="headerSessionIdText"></span>
+                    <div class="header-left">
+                        <img src="retrofocus.png" alt="Retrofocus" class="logo-banner">
+                        <div class="header-session-info">
+                            <div id="headerSessionId" style="display: none; color: #667eea; font-weight: 600; font-size: 14px; cursor: pointer;" onclick="copySessionIdToClipboard()" title="Cliquer pour copier l'ID de session">
+                                Session: <span id="headerSessionIdText"></span>
+                            </div>
+                            <div id="headerTimerDisplay" style="display: none; color: #718096; font-size: 14px; margin-top: 5px;">
+                                ⏱️ <span id="headerTimerText">5:00</span>
+                            </div>
+                        </div>
                     </div>
                     <div class="session-info">
                         <div class="user-name">
@@ -115,6 +146,7 @@
                             👍 Votes restants: <span id="votesCount">3</span>
                         </div>
                         <button id="clearAllBtn" class="btn btn-danger" onclick="clearAll()">🗑️ Tout effacer</button>
+                        <button class="btn btn-primary" onclick="exportData()">📥 Exporter</button>
                     </div>
                 </header>
 
@@ -207,11 +239,6 @@
                 <button class="btn btn-primary" onclick="startTimer(10)">10 min</button>
                 <button class="btn btn-danger" onclick="resetTimer()">⏹️ Stop</button>
             </div>
-        </div>
-
-        <div class="export-section">
-            <h3>📊 Exporter la rétrospective</h3>
-            <button class="btn btn-primary" onclick="exportData()">📥 Télécharger (JSON)</button>
         </div>
             </div>
 
