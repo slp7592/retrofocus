@@ -16,11 +16,10 @@ Allez dans **Firebase Console** → **Realtime Database** → **Règles** et col
     "sessions": {
       "$sessionId": {
         ".read": true,
-        ".write": true,
+        ".write": "!data.exists() || data.exists()",
 
         "owner": {
-          ".write": "!data.exists()",
-          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 100 && newData.val().matches(/^user-[a-f0-9]{32}$/)"
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 100 && newData.val().matches(/^user-[a-f0-9]{32}$/) && (!data.exists() || data.val() === newData.val())"
         },
 
         "phase": {
@@ -213,9 +212,10 @@ Les règles ont été considérablement renforcées pour bloquer les injections 
 #### Nouvelles protections anti-usurpation (v5.0)
 
 🔒 **Protection de l'owner** :
-- `.write: "!data.exists()"` → Le champ `owner` ne peut être écrit **qu'une seule fois** lors de la création de session
-- Une fois défini, l'owner ne peut **jamais être modifié**, empêchant toute usurpation d'identité
+- `.validate: "(!data.exists() || data.val() === newData.val())"` → Le champ `owner` ne peut **jamais être modifié** une fois défini
+- La validation permet la création initiale mais empêche toute modification ultérieure
 - Validation du format : seuls les userId générés par `crypto.getRandomValues()` sont acceptés (`user-[32 hex chars]`)
+- Mécanisme d'immutabilité : le nouvel owner doit être identique à l'ancien (impossible de changer)
 
 🔒 **Validation stricte des userId** :
 - Format obligatoire : `user-[a-f0-9]{32}$` (exactement 32 caractères hexadécimaux minuscules)
@@ -227,7 +227,7 @@ Les règles ont été considérablement renforcées pour bloquer les injections 
 ```javascript
 // ❌ REJETÉ : tentative de modification de l'owner existant
 await update(sessionRef, { owner: 'user-hacker123...' });
-// Error: Permission denied (owner already exists)
+// Error: Validation failed (owner cannot be changed)
 
 // ❌ REJETÉ : userId au mauvais format
 const usersRef = ref(db, 'sessions/retro-abc/users/admin');

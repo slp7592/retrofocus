@@ -66,11 +66,10 @@
     "sessions": {
       "$sessionId": {
         ".read": true,
-        ".write": true,
+        ".write": "!data.exists() || data.exists()",
 
         "owner": {
-          ".write": "!data.exists()",
-          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 100 && newData.val().matches(/^user-[a-f0-9]{32}$/)"
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 100 && newData.val().matches(/^user-[a-f0-9]{32}$/) && (!data.exists() || data.val() === newData.val())"
         },
 
         "phase": {
