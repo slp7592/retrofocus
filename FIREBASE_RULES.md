@@ -4,7 +4,9 @@
 
 Après avoir configuré Firebase, vous devez mettre à jour les règles de sécurité dans la console Firebase.
 
-## 📋 Règles de sécurité recommandées
+> 🔒 **Mise à jour de sécurité** : Les règles ci-dessous incluent les dernières améliorations de sécurité (immutabilité de l'owner, validation stricte des userId).
+
+## 📋 Règles de sécurité renforcées (v5.0)
 
 Allez dans **Firebase Console** → **Realtime Database** → **Règles** et collez ce JSON :
 
@@ -17,7 +19,8 @@ Allez dans **Firebase Console** → **Realtime Database** → **Règles** et col
         ".write": true,
 
         "owner": {
-          ".validate": "newData.isString() && newData.val().length > 0"
+          ".write": "!data.exists()",
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 100 && newData.val().matches(/^user-[a-f0-9]{32}$/)"
         },
 
         "phase": {
@@ -26,7 +29,7 @@ Allez dans **Firebase Console** → **Realtime Database** → **Règles** et col
 
         "users": {
           "$userId": {
-            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 30"
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 30 && $userId.matches(/^user-[a-f0-9]{32}$/)"
           }
         },
 
@@ -194,9 +197,11 @@ Chaque session contient :
 - **lastUpdate** : Nombre positif (> 0) représentant le timestamp de la dernière mise à jour
 - **$other** : Tous les autres champs sont rejetés (sécurité stricte)
 
-### Sécurité Renforcée (v4.2.0)
+### Sécurité Renforcée (v5.0)
 
 Les règles ont été considérablement renforcées pour bloquer les injections et abus :
+
+#### Protections de validation des données (v4.2.0)
 
 ✅ **Validation de type stricte** : Tous les champs sont validés par type (isString, isNumber, isBoolean)
 ✅ **Validation de longueur** : Min/max sur tous les champs de texte
@@ -205,8 +210,34 @@ Les règles ont été considérablement renforcées pour bloquer les injections 
 ✅ **Rejet des champs inconnus** : `"$other": { ".validate": false }` rejette tous les champs non prévus
 ✅ **Validation imbriquée** : Validation au niveau racine ET au niveau des sous-champs
 
-**Exemple de rejet automatique :**
+#### Nouvelles protections anti-usurpation (v5.0)
+
+🔒 **Protection de l'owner** :
+- `.write: "!data.exists()"` → Le champ `owner` ne peut être écrit **qu'une seule fois** lors de la création de session
+- Une fois défini, l'owner ne peut **jamais être modifié**, empêchant toute usurpation d'identité
+- Validation du format : seuls les userId générés par `crypto.getRandomValues()` sont acceptés (`user-[32 hex chars]`)
+
+🔒 **Validation stricte des userId** :
+- Format obligatoire : `user-[a-f0-9]{32}$` (exactement 32 caractères hexadécimaux minuscules)
+- Empêche les userId personnalisés ou fantaisistes (`admin`, `root`, `user-123`, etc.)
+- Garantit que seuls les ID générés de manière cryptographiquement sécurisée sont utilisés
+
+**Exemples de rejets automatiques :**
+
 ```javascript
+// ❌ REJETÉ : tentative de modification de l'owner existant
+await update(sessionRef, { owner: 'user-hacker123...' });
+// Error: Permission denied (owner already exists)
+
+// ❌ REJETÉ : userId au mauvais format
+const usersRef = ref(db, 'sessions/retro-abc/users/admin');
+await set(usersRef, 'Hacker');
+// Error: Validation failed (userId doesn't match pattern)
+
+// ❌ REJETÉ : owner avec format invalide
+await set(sessionRef, { owner: 'user-ABCD1234...' });
+// Error: Validation failed (uppercase not allowed)
+
 // ❌ REJETÉ : votes trop élevé (> 999)
 { votes: 10000 }
 
@@ -220,7 +251,14 @@ Les règles ont été considérablement renforcées pour bloquer les injections 
 { content: "test", maliciousField: "hack" }
 
 // ✅ ACCEPTÉ : toutes les validations passent
-{ id: 123, content: "Bonne idée", author: "Alice", votes: 5, timestamp: 1704700000000 }
+{
+  owner: "user-a1b2c3d4e5f6789012345678901234567",
+  id: 123,
+  content: "Bonne idée",
+  author: "Alice",
+  votes: 5,
+  timestamp: 1704700000000
+}
 ```
 
 ## 🎯 Permissions côté application

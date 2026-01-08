@@ -659,13 +659,17 @@ function updateSessionUI(sessionId) {
         sessionSection.style.display = 'none';
     }
 
-    // Afficher l'ID de session dans le header
+    // Afficher l'ID de session dans le header (tronqué pour économiser l'espace)
     const headerSessionId = document.getElementById('headerSessionId');
     const headerSessionIdText = document.getElementById('headerSessionIdText');
 
     if (headerSessionId && headerSessionIdText) {
         headerSessionId.style.display = 'block';
-        headerSessionIdText.textContent = sessionId;
+        // Afficher seulement les 15 premiers caractères + "..."
+        const truncatedId = sessionId.length > 15 ? sessionId.substring(0, 15) + '...' : sessionId;
+        headerSessionIdText.textContent = truncatedId;
+        // Stocker l'ID complet dans un attribut data pour le copier
+        headerSessionId.dataset.fullSessionId = sessionId;
     }
 
     // Afficher le compteur de votes
