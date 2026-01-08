@@ -83,21 +83,21 @@ export async function createNewSession(userName) {
     currentUserName = userName.trim().substring(0, 30);
     isOwner = true;
 
-    try {
-        // Écrire les champs un par un pour éviter les problèmes de validation Firebase
-        await update(currentSessionRef, {
-            owner: currentUserId,
-            phase: 'reflexion'
-        });
-
-        await set(ref(db, `sessions/${currentSessionId}/users/${currentUserId}`), currentUserName);
-
-        await update(ref(db, `sessions/${currentSessionId}/timer`), {
+    const initialData = {
+        owner: currentUserId,
+        phase: 'reflexion',
+        users: {
+            [currentUserId]: currentUserName
+        },
+        timer: {
             timeRemaining: 0,
             isRunning: false,
             lastUpdate: Date.now()
-        });
+        }
+    };
 
+    try {
+        await set(currentSessionRef, initialData);
         return currentSessionId;
     } catch (error) {
         console.error('Erreur lors de la création de la session:', error);
