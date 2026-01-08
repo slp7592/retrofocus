@@ -23,17 +23,34 @@ export function initialize(database) {
 }
 
 /**
- * Génère un ID de session unique
+ * Génère un ID de session sécurisé avec crypto.getRandomValues()
+ * Format: retro-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX (32 caractères hex)
  */
 function generateSessionId() {
-    return 'retro-' + Math.random().toString(36).substring(2, 9);
+    // Utiliser crypto.getRandomValues pour un vrai aléatoire cryptographique
+    const array = new Uint8Array(16); // 16 bytes = 32 caractères hex
+    crypto.getRandomValues(array);
+
+    const randomHex = Array.from(array, byte =>
+        byte.toString(16).padStart(2, '0')
+    ).join('');
+
+    return 'retro-' + randomHex;
 }
 
 /**
- * Génère un ID utilisateur unique
+ * Génère un ID utilisateur sécurisé avec crypto.getRandomValues()
+ * Format: user-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX (32 caractères hex)
  */
 function generateUserId() {
-    return 'user-' + Date.now() + '-' + Math.random().toString(36).substring(2, 9);
+    const array = new Uint8Array(16); // 16 bytes = 32 caractères hex
+    crypto.getRandomValues(array);
+
+    const randomHex = Array.from(array, byte =>
+        byte.toString(16).padStart(2, '0')
+    ).join('');
+
+    return 'user-' + randomHex;
 }
 
 /**

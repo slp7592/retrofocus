@@ -53,13 +53,13 @@ export async function addCard(type, content) {
         return;
     }
 
-    if (content.length > 200) {
-        throw new Error('Le contenu ne peut pas dépasser 200 caractères');
+    if (content.length > 300) {
+        throw new Error('Le contenu ne peut pas dépasser 300 caractères');
     }
 
     const card = {
         id: Date.now() + Math.random(),
-        content: content.trim().substring(0, 200),
+        content: content.trim().substring(0, 300),
         author: getUserName(),
         timestamp: Date.now()
     };

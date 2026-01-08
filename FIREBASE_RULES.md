@@ -32,34 +32,105 @@ Allez dans **Firebase Console** → **Realtime Database** → **Règles** et col
 
         "positive": {
           "$cardId": {
-            ".validate": "newData.hasChildren(['id', 'content', 'author', 'votes', 'timestamp']) && newData.child('content').val().length <= 200 && newData.child('author').val().length <= 30 && newData.child('votes').isNumber() && (!newData.child('groupId').exists() || newData.child('groupId').isString())"
+            ".validate": "newData.hasChildren(['id', 'content', 'author', 'votes', 'timestamp']) && newData.child('content').isString() && newData.child('content').val().length > 0 && newData.child('content').val().length <= 300 && newData.child('author').isString() && newData.child('author').val().length > 0 && newData.child('author').val().length <= 30 && newData.child('votes').isNumber() && newData.child('votes').val() >= 0 && newData.child('votes').val() <= 999 && newData.child('timestamp').isNumber() && newData.child('timestamp').val() > 0 && (!newData.child('groupId').exists() || (newData.child('groupId').isString() && newData.child('groupId').val().length > 0 && newData.child('groupId').val().length <= 100))",
+
+            "id": {
+              ".validate": "newData.isNumber() && newData.val() > 0"
+            },
+            "content": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 300"
+            },
+            "author": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 30"
+            },
+            "votes": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 999"
+            },
+            "timestamp": {
+              ".validate": "newData.isNumber() && newData.val() > 0"
+            },
+            "groupId": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 100"
+            },
+            "$other": {
+              ".validate": false
+            }
           }
         },
 
         "negative": {
           "$cardId": {
-            ".validate": "newData.hasChildren(['id', 'content', 'author', 'votes', 'timestamp']) && newData.child('content').val().length <= 200 && newData.child('author').val().length <= 30 && newData.child('votes').isNumber() && (!newData.child('groupId').exists() || newData.child('groupId').isString())"
+            ".validate": "newData.hasChildren(['id', 'content', 'author', 'votes', 'timestamp']) && newData.child('content').isString() && newData.child('content').val().length > 0 && newData.child('content').val().length <= 300 && newData.child('author').isString() && newData.child('author').val().length > 0 && newData.child('author').val().length <= 30 && newData.child('votes').isNumber() && newData.child('votes').val() >= 0 && newData.child('votes').val() <= 999 && newData.child('timestamp').isNumber() && newData.child('timestamp').val() > 0 && (!newData.child('groupId').exists() || (newData.child('groupId').isString() && newData.child('groupId').val().length > 0 && newData.child('groupId').val().length <= 100))",
+
+            "id": {
+              ".validate": "newData.isNumber() && newData.val() > 0"
+            },
+            "content": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 300"
+            },
+            "author": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 30"
+            },
+            "votes": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 999"
+            },
+            "timestamp": {
+              ".validate": "newData.isNumber() && newData.val() > 0"
+            },
+            "groupId": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 100"
+            },
+            "$other": {
+              ".validate": false
+            }
           }
         },
 
         "action": {
           "$cardId": {
-            ".validate": "newData.hasChildren(['id', 'content', 'author', 'timestamp']) && newData.child('content').val().length <= 200 && newData.child('author').val().length <= 30"
+            ".validate": "newData.hasChildren(['id', 'content', 'author', 'timestamp']) && newData.child('content').isString() && newData.child('content').val().length > 0 && newData.child('content').val().length <= 300 && newData.child('author').isString() && newData.child('author').val().length > 0 && newData.child('author').val().length <= 30 && newData.child('timestamp').isNumber() && newData.child('timestamp').val() > 0",
+
+            "id": {
+              ".validate": "newData.isNumber() && newData.val() > 0"
+            },
+            "content": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 300"
+            },
+            "author": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 30"
+            },
+            "timestamp": {
+              ".validate": "newData.isNumber() && newData.val() > 0"
+            },
+            "$other": {
+              ".validate": false
+            }
           }
         },
 
         "timer": {
           "timeRemaining": {
-            ".validate": "newData.isNumber() && newData.val() >= 0"
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 86400"
           },
           "isRunning": {
             ".validate": "newData.isBoolean()"
           },
           "lastUpdate": {
-            ".validate": "newData.isNumber()"
+            ".validate": "newData.isNumber() && newData.val() > 0"
+          },
+          "$other": {
+            ".validate": false
           }
+        },
+
+        "$other": {
+          ".validate": false
         }
       }
+    },
+
+    "$other": {
+      ".validate": false
     }
   }
 }
@@ -98,23 +169,59 @@ Chaque session contient :
 
 **Points positifs et négatifs** :
 - Doivent contenir : id, content, author, votes, timestamp
-- Content : max 200 caractères
-- Author : max 30 caractères
-- Votes : doit être un nombre
-- **groupId** : Optionnel, doit être une chaîne si présent (pour le regroupement de cartes)
+- **id** : Doit être un nombre positif (> 0)
+- **content** : Chaîne de caractères non vide, min 1 et max 300 caractères
+- **author** : Chaîne de caractères non vide, min 1 et max 30 caractères
+- **votes** : Nombre entre 0 et 999 (limite max de votes)
+- **timestamp** : Nombre positif (> 0) représentant la date de création
+- **groupId** : Optionnel, chaîne de caractères (1-100 caractères) pour le regroupement de cartes
+- **$other** : Tous les autres champs sont rejetés (sécurité stricte)
 
 **Actions** :
 - Doivent contenir : id, content, author, timestamp
+- **id** : Doit être un nombre positif (> 0)
+- **content** : Chaîne de caractères non vide, min 1 et max 300 caractères
+- **author** : Chaîne de caractères non vide, min 1 et max 30 caractères
+- **timestamp** : Nombre positif (> 0) représentant la date de création
 - Pas de champ "votes" (les actions ne sont pas votables)
 - Pas de champ "groupId" (les actions ne peuvent pas être regroupées)
-- Content : max 200 caractères
-- Author : max 30 caractères
+- **$other** : Tous les autres champs sont rejetés (sécurité stricte)
 
 ### Timer
 
-- **timeRemaining** : Nombre de secondes restantes (≥ 0)
+- **timeRemaining** : Nombre de secondes restantes (entre 0 et 86400 = 24h max)
 - **isRunning** : Boolean indiquant si le timer est actif
-- **lastUpdate** : Timestamp de la dernière mise à jour
+- **lastUpdate** : Nombre positif (> 0) représentant le timestamp de la dernière mise à jour
+- **$other** : Tous les autres champs sont rejetés (sécurité stricte)
+
+### Sécurité Renforcée (v4.2.0)
+
+Les règles ont été considérablement renforcées pour bloquer les injections et abus :
+
+✅ **Validation de type stricte** : Tous les champs sont validés par type (isString, isNumber, isBoolean)
+✅ **Validation de longueur** : Min/max sur tous les champs de texte
+✅ **Validation de plage** : Min/max sur tous les nombres (votes ≤ 999, timer ≤ 24h)
+✅ **Timestamps positifs** : Tous les timestamps doivent être > 0
+✅ **Rejet des champs inconnus** : `"$other": { ".validate": false }` rejette tous les champs non prévus
+✅ **Validation imbriquée** : Validation au niveau racine ET au niveau des sous-champs
+
+**Exemple de rejet automatique :**
+```javascript
+// ❌ REJETÉ : votes trop élevé (> 999)
+{ votes: 10000 }
+
+// ❌ REJETÉ : contenu vide
+{ content: "" }
+
+// ❌ REJETÉ : timestamp invalide (≤ 0)
+{ timestamp: -1 }
+
+// ❌ REJETÉ : champ non autorisé
+{ content: "test", maliciousField: "hack" }
+
+// ✅ ACCEPTÉ : toutes les validations passent
+{ id: 123, content: "Bonne idée", author: "Alice", votes: 5, timestamp: 1704700000000 }
+```
 
 ## 🎯 Permissions côté application
 
