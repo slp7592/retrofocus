@@ -96,16 +96,6 @@ export async function createNewSession(userName) {
         }
     };
 
-    // LOG DEBUG: Afficher les données envoyées
-    console.log('🔍 DEBUG - Données envoyées à Firebase:', {
-        sessionId: currentSessionId,
-        userId: currentUserId,
-        userIdLength: currentUserId.length,
-        userIdFormat: /^user-[a-f0-9]{32}$/.test(currentUserId) ? '✅ Format OK' : '❌ Format invalide',
-        userName: currentUserName,
-        initialData
-    });
-
     try {
         await set(currentSessionRef, initialData);
         return currentSessionId;
