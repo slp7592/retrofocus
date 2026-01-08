@@ -145,8 +145,9 @@ export function validateConfig(config) {
     // Validation optionnelle si présents
     const optionalValidations = {
         storageBucket: {
-            regex: /^[a-z0-9-]+\.appspot\.com$/,
-            error: 'Storage Bucket invalide'
+            // Accepter : vide, *.appspot.com, ou *.firebasestorage.app
+            regex: /^$|^[a-z0-9-]+\.(appspot\.com|firebasestorage\.app)$/,
+            error: 'Storage Bucket invalide (format attendu: projet-id.appspot.com ou projet-id.firebasestorage.app)'
         },
         messagingSenderId: {
             regex: /^[0-9]{12}$/,
