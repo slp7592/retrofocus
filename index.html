@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Content Security Policy (sans frame-ancestors qui nécessite un header HTTP) -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://firebasestorage.googleapis.com; style-src 'self' 'unsafe-inline'; connect-src https://*.firebaseio.com https://*.firebasedatabase.app https://*.googleapis.com https://www.gstatic.com wss://*.firebaseio.com wss://*.firebasedatabase.app; img-src 'self' data: https:; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src https://*.firebasedatabase.app; upgrade-insecure-requests;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com https://firebasestorage.googleapis.com; style-src 'self' 'unsafe-inline'; connect-src https://*.firebaseio.com https://*.firebasedatabase.app https://*.googleapis.com https://www.gstatic.com wss://*.firebaseio.com wss://*.firebasedatabase.app; img-src 'self' data: https:; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src https://*.firebasedatabase.app; upgrade-insecure-requests;">
     <title>Retro Focus</title>
     <link rel="stylesheet" href="css/styles.css">
 </head>
@@ -187,7 +187,7 @@
   }
 }</textarea>
 
-            <button class="btn btn-primary" onclick="initializeFirebase()" style="width: 100%; margin-top: 10px;">
+            <button id="initializeFirebaseBtn" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
                 🚀 Initialiser Firebase
             </button>
         </div>
@@ -201,7 +201,7 @@
                     <div class="header-left">
                         <img src="retrofocus.png" alt="Retrofocus" class="logo-banner">
                         <div class="header-session-info">
-                            <div id="headerSessionId" style="display: none; color: #667eea; font-weight: 600; font-size: 14px; cursor: pointer;" onclick="copySessionIdToClipboard()" title="Cliquer pour copier l'ID de session">
+                            <div id="headerSessionId" style="display: none; color: #667eea; font-weight: 600; font-size: 14px; cursor: pointer;" title="Cliquer pour copier l'ID de session">
                                 Session: <span id="headerSessionIdText"></span>
                             </div>
                             <div id="headerTimerDisplay" style="display: none; color: #718096; font-size: 18px; margin-top: 5px;">
@@ -217,8 +217,8 @@
                         <div id="votesRemaining" style="display: none; color: #667eea; font-weight: 600; margin-right: 15px;">
                             👍 Votes restants: <span id="votesCount">3</span>
                         </div>
-                        <button id="clearAllBtn" class="btn btn-danger" onclick="clearAll()">🗑️ Tout effacer</button>
-                        <button class="btn btn-primary" onclick="exportData()">📥 Exporter</button>
+                        <button id="clearAllBtn" class="btn btn-danger">🗑️ Tout effacer</button>
+                        <button id="exportDataBtn" class="btn btn-primary">📥 Exporter</button>
                     </div>
                 </header>
 
@@ -246,7 +246,7 @@
                 </div>
             </div>
             <div id="phaseControls" style="display: none; text-align: center; margin-top: 15px;">
-                <button id="nextPhaseBtn" class="btn btn-primary" onclick="nextPhase()"></button>
+                <button id="nextPhaseBtn" class="btn btn-primary"></button>
             </div>
         </div>
 
@@ -254,15 +254,15 @@
             <h3>🔗 Session</h3>
             <div class="session-controls">
                 <input type="text" id="sessionIdInput" placeholder="Entrez un ID de session" style="flex: 1; min-width: 200px;">
-                <button class="btn btn-primary" onclick="joinSession()">Rejoindre</button>
-                <button class="btn btn-secondary" onclick="createNewSession()">Nouvelle session</button>
+                <button id="joinSessionBtn" class="btn btn-primary">Rejoindre</button>
+                <button id="createNewSessionBtn" class="btn btn-secondary">Nouvelle session</button>
             </div>
             <div id="currentSession" style="margin-top: 15px; display: none;">
                 <p style="color: #718096; margin-bottom: 10px;">
                     <span class="status-indicator online"></span>
                     Session active - Temps réel activé
                 </p>
-                <div class="session-id" id="sessionIdDisplay" onclick="copySessionId()" title="Cliquer pour copier"></div>
+                <div class="session-id" id="sessionIdDisplay" title="Cliquer pour copier"></div>
                 <p style="color: #718096; font-size: 12px; margin-top: 10px;">
                     📋 Cliquez sur l'ID pour copier et partager avec votre équipe
                 </p>
@@ -277,7 +277,7 @@
                 </div>
                 <div class="add-card">
                     <input type="text" id="inputPositive" placeholder="Qu'est-ce qui a bien fonctionné ?" maxlength="300">
-                    <button class="btn btn-primary" onclick="addCard('positive')">+</button>
+                    <button class="btn btn-primary" data-type="positive" data-action="add-card">+</button>
                 </div>
                 <div id="cardsPositive"></div>
             </div>
@@ -289,7 +289,7 @@
                 </div>
                 <div class="add-card">
                     <input type="text" id="inputNegative" placeholder="Qu'est-ce qui pourrait être amélioré ?" maxlength="300">
-                    <button class="btn btn-primary" onclick="addCard('negative')">+</button>
+                    <button class="btn btn-primary" data-type="negative" data-action="add-card">+</button>
                 </div>
                 <div id="cardsNegative"></div>
             </div>
@@ -301,7 +301,7 @@
                 </div>
                 <div class="add-card">
                     <input type="text" id="inputAction" placeholder="Quelle action mettre en place ?" maxlength="300">
-                    <button class="btn btn-primary" onclick="addCard('action')">+</button>
+                    <button class="btn btn-primary" data-type="action" data-action="add-card">+</button>
                 </div>
                 <div id="cardsAction"></div>
             </div>
@@ -311,10 +311,10 @@
             <h3>⏱️ Minuteur</h3>
             <div class="timer-display" id="timerDisplay">5:00</div>
             <div class="timer-controls">
-                <button class="btn btn-primary" onclick="startTimer(3)">3 min</button>
-                <button class="btn btn-primary" onclick="startTimer(5)">5 min</button>
-                <button class="btn btn-primary" onclick="startTimer(7)">7 min</button>
-                <button class="btn btn-danger" onclick="resetTimer()">⏹️ Stop</button>
+                <button class="btn btn-primary" data-minutes="3" data-action="start-timer">3 min</button>
+                <button class="btn btn-primary" data-minutes="5" data-action="start-timer">5 min</button>
+                <button class="btn btn-primary" data-minutes="7" data-action="start-timer">7 min</button>
+                <button id="resetTimerBtn" class="btn btn-danger">⏹️ Stop</button>
             </div>
         </div>
             </div>
@@ -342,11 +342,11 @@
 
     <!-- Modal de détail des cartes groupées -->
     <div id="groupDetailModal" class="custom-modal" style="display: none;">
-        <div class="custom-modal-overlay" onclick="closeGroupDetailModal()"></div>
+        <div class="custom-modal-overlay" id="groupDetailOverlay"></div>
         <div class="custom-modal-content group-detail-modal">
             <h3 id="groupDetailTitle" style="color: #667eea; margin-bottom: 20px;">Cartes du groupe</h3>
             <div id="groupDetailContent" class="group-detail-list"></div>
-            <button class="btn btn-primary" onclick="closeGroupDetailModal()" style="width: 100%; margin-top: 20px;">Fermer</button>
+            <button id="closeGroupDetailBtn" class="btn btn-primary" style="width: 100%; margin-top: 20px;">Fermer</button>
         </div>
     </div>
 

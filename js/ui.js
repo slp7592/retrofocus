@@ -143,7 +143,7 @@ export function renderCards(container, items, type, handlers) {
                  data-group-id="${item.groupId}"
                  data-is-group="true"
                  ${canGroup ? 'draggable="false"' : ''}>
-                <div class="card-group-badge" onclick="showGroupDetail('${type}', '${item.groupId}')">
+                <div class="card-group-badge" data-action="show-group-detail" data-type="${type}" data-group-id="${item.groupId}">
                     📦 ${item.cards.length}
                 </div>
                 ${isGroupingPhase && canGroup ? `
@@ -241,6 +241,14 @@ export function renderCards(container, items, type, handlers) {
             btn.addEventListener('click', () => {
                 if (handlers.onUngroupAll) {
                     handlers.onUngroupAll(btn.dataset.type, btn.dataset.groupId);
+                }
+            });
+        });
+
+        container.querySelectorAll('[data-action="show-group-detail"]').forEach(badge => {
+            badge.addEventListener('click', () => {
+                if (window.showGroupDetail) {
+                    window.showGroupDetail(badge.dataset.type, badge.dataset.groupId);
                 }
             });
         });

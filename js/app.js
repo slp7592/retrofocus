@@ -121,11 +121,11 @@ function showShareLink(config) {
     alertDiv.innerHTML = `
         <strong>✅ Firebase configuré avec succès!</strong>
         <p style="margin-top: 10px; margin-bottom: 5px;">Partagez ce lien avec votre équipe pour qu'ils n'aient pas à reconfigurer Firebase :</p>
-        <div class="share-link" onclick="copyShareLink(this)" title="Cliquer pour copier">
+        <div class="share-link" data-action="copy-share-link" title="Cliquer pour copier">
             ${shareLink}
         </div>
         <p style="margin-top: 5px; font-size: 12px; color: #2d5016;">📋 Cliquez sur le lien pour le copier</p>
-        <button class="btn btn-primary" onclick="closeConfigAndStart()" style="width: 100%; margin-top: 15px;">
+        <button class="btn btn-primary" data-action="close-config-start" style="width: 100%; margin-top: 15px;">
             Continuer vers l'application →
         </button>
     `;
@@ -137,6 +137,19 @@ function showShareLink(config) {
     }
 
     setupContent.insertBefore(alertDiv, setupContent.firstChild);
+
+    // Attacher les event listeners
+    const shareElement = alertDiv.querySelector('[data-action="copy-share-link"]');
+    if (shareElement) {
+        shareElement.addEventListener('click', function() {
+            window.copyShareLink(this);
+        });
+    }
+
+    const continueBtn = alertDiv.querySelector('[data-action="close-config-start"]');
+    if (continueBtn) {
+        continueBtn.addEventListener('click', window.closeConfigAndStart);
+    }
 }
 
 /**
@@ -197,6 +210,80 @@ function setupEventListeners() {
                 handleJoinSession();
             }
         });
+    }
+
+    // Boutons d'ajout de cartes
+    document.querySelectorAll('[data-action="add-card"]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            handleAddCard(btn.dataset.type);
+        });
+    });
+
+    // Boutons de session
+    const joinBtn = document.getElementById('joinSessionBtn');
+    if (joinBtn) {
+        joinBtn.addEventListener('click', handleJoinSession);
+    }
+
+    const createBtn = document.getElementById('createNewSessionBtn');
+    if (createBtn) {
+        createBtn.addEventListener('click', window.createNewSession);
+    }
+
+    // Boutons du header
+    const headerSessionId = document.getElementById('headerSessionId');
+    if (headerSessionId) {
+        headerSessionId.addEventListener('click', window.copySessionIdToClipboard);
+    }
+
+    const sessionIdDisplay = document.getElementById('sessionIdDisplay');
+    if (sessionIdDisplay) {
+        sessionIdDisplay.addEventListener('click', window.copySessionId);
+    }
+
+    const clearAllBtn = document.getElementById('clearAllBtn');
+    if (clearAllBtn) {
+        clearAllBtn.addEventListener('click', window.clearAll);
+    }
+
+    const exportDataBtn = document.getElementById('exportDataBtn');
+    if (exportDataBtn) {
+        exportDataBtn.addEventListener('click', window.exportData);
+    }
+
+    // Bouton phase suivante
+    const nextPhaseBtn = document.getElementById('nextPhaseBtn');
+    if (nextPhaseBtn) {
+        nextPhaseBtn.addEventListener('click', window.nextPhase);
+    }
+
+    // Boutons timer
+    document.querySelectorAll('[data-action="start-timer"]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            window.startTimer(parseInt(btn.dataset.minutes));
+        });
+    });
+
+    const resetTimerBtn = document.getElementById('resetTimerBtn');
+    if (resetTimerBtn) {
+        resetTimerBtn.addEventListener('click', window.resetTimer);
+    }
+
+    // Modal de groupe
+    const closeGroupDetailBtn = document.getElementById('closeGroupDetailBtn');
+    if (closeGroupDetailBtn) {
+        closeGroupDetailBtn.addEventListener('click', window.closeGroupDetailModal);
+    }
+
+    const groupDetailOverlay = document.getElementById('groupDetailOverlay');
+    if (groupDetailOverlay) {
+        groupDetailOverlay.addEventListener('click', window.closeGroupDetailModal);
+    }
+
+    // Bouton initialisation Firebase
+    const initFirebaseBtn = document.getElementById('initializeFirebaseBtn');
+    if (initFirebaseBtn) {
+        initFirebaseBtn.addEventListener('click', window.initializeFirebase);
     }
 
     // Ne pas configurer les listeners de cartes ici
