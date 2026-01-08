@@ -19,6 +19,7 @@ Allez dans **Firebase Console** → **Realtime Database** → **Règles** et col
         ".write": true,
 
         "owner": {
+          ".write": "!data.exists()",
           ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 100 && newData.val().matches(/^user-[a-f0-9]{32}$/) && (!data.exists() || data.val() === newData.val())"
         },
 
