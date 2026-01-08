@@ -1,4 +1,4 @@
-# 🔄 Rétrospective Sprint
+# 🔄 Retro Focus
 
 Application web collaborative pour rétrospectives agiles en temps réel, hébergée gratuitement sur GitHub Pages avec Firebase.
 
