@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://firebasestorage.googleapis.com https://*.firebasedatabase.app; style-src 'self' 'unsafe-inline'; connect-src https://*.firebaseio.com https://*.firebasedatabase.app https://*.googleapis.com https://www.gstatic.com wss://*.firebaseio.com wss://*.firebasedatabase.app; frame-src https://*.firebasedatabase.app;">
+    <!-- Protection Clickjacking -->
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <!-- Content Security Policy amélioré -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://firebasestorage.googleapis.com; style-src 'self' 'unsafe-inline'; connect-src https://*.firebaseio.com https://*.firebasedatabase.app https://*.googleapis.com https://www.gstatic.com wss://*.firebaseio.com wss://*.firebasedatabase.app; img-src 'self' data: https:; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; frame-src https://*.firebasedatabase.app; upgrade-insecure-requests; block-all-mixed-content;">
     <title>Rétrospective Sprint</title>
     <link rel="stylesheet" href="css/styles.css">
 </head>
@@ -60,7 +63,7 @@
                 ⚠️ Après initialisation, ajoutez ces règles de sécurité dans Firebase (onglet Règles) :
             </div>
 
-            <textarea class="config-input" readonly style="min-height: 400px;">{
+            <textarea class="config-input" readonly style="min-height: 500px;">{
   "rules": {
     "sessions": {
       "$sessionId": {
@@ -68,7 +71,7 @@
         ".write": true,
 
         "owner": {
-          ".validate": "newData.isString() && newData.val().length > 0"
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 100"
         },
 
         "phase": {
@@ -83,34 +86,105 @@
 
         "positive": {
           "$cardId": {
-            ".validate": "newData.hasChildren(['id', 'content', 'author', 'votes', 'timestamp']) && newData.child('content').val().length <= 200 && newData.child('author').val().length <= 30 && newData.child('votes').isNumber() && (!newData.child('groupId').exists() || newData.child('groupId').isString())"
+            ".validate": "newData.hasChildren(['id', 'content', 'author', 'votes', 'timestamp']) && newData.child('content').isString() && newData.child('content').val().length > 0 && newData.child('content').val().length <= 300 && newData.child('author').isString() && newData.child('author').val().length > 0 && newData.child('author').val().length <= 30 && newData.child('votes').isNumber() && newData.child('votes').val() >= 0 && newData.child('votes').val() <= 999 && newData.child('timestamp').isNumber() && newData.child('timestamp').val() > 0 && (!newData.child('groupId').exists() || (newData.child('groupId').isString() && newData.child('groupId').val().length > 0 && newData.child('groupId').val().length <= 100))",
+
+            "id": {
+              ".validate": "newData.isNumber() && newData.val() > 0"
+            },
+            "content": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 300"
+            },
+            "author": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 30"
+            },
+            "votes": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 999"
+            },
+            "timestamp": {
+              ".validate": "newData.isNumber() && newData.val() > 0"
+            },
+            "groupId": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 100"
+            },
+            "$other": {
+              ".validate": false
+            }
           }
         },
 
         "negative": {
           "$cardId": {
-            ".validate": "newData.hasChildren(['id', 'content', 'author', 'votes', 'timestamp']) && newData.child('content').val().length <= 200 && newData.child('author').val().length <= 30 && newData.child('votes').isNumber() && (!newData.child('groupId').exists() || newData.child('groupId').isString())"
+            ".validate": "newData.hasChildren(['id', 'content', 'author', 'votes', 'timestamp']) && newData.child('content').isString() && newData.child('content').val().length > 0 && newData.child('content').val().length <= 300 && newData.child('author').isString() && newData.child('author').val().length > 0 && newData.child('author').val().length <= 30 && newData.child('votes').isNumber() && newData.child('votes').val() >= 0 && newData.child('votes').val() <= 999 && newData.child('timestamp').isNumber() && newData.child('timestamp').val() > 0 && (!newData.child('groupId').exists() || (newData.child('groupId').isString() && newData.child('groupId').val().length > 0 && newData.child('groupId').val().length <= 100))",
+
+            "id": {
+              ".validate": "newData.isNumber() && newData.val() > 0"
+            },
+            "content": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 300"
+            },
+            "author": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 30"
+            },
+            "votes": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 999"
+            },
+            "timestamp": {
+              ".validate": "newData.isNumber() && newData.val() > 0"
+            },
+            "groupId": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 100"
+            },
+            "$other": {
+              ".validate": false
+            }
           }
         },
 
         "action": {
           "$cardId": {
-            ".validate": "newData.hasChildren(['id', 'content', 'author', 'timestamp']) && newData.child('content').val().length <= 200 && newData.child('author').val().length <= 30"
+            ".validate": "newData.hasChildren(['id', 'content', 'author', 'timestamp']) && newData.child('content').isString() && newData.child('content').val().length > 0 && newData.child('content').val().length <= 300 && newData.child('author').isString() && newData.child('author').val().length > 0 && newData.child('author').val().length <= 30 && newData.child('timestamp').isNumber() && newData.child('timestamp').val() > 0",
+
+            "id": {
+              ".validate": "newData.isNumber() && newData.val() > 0"
+            },
+            "content": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 300"
+            },
+            "author": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 30"
+            },
+            "timestamp": {
+              ".validate": "newData.isNumber() && newData.val() > 0"
+            },
+            "$other": {
+              ".validate": false
+            }
           }
         },
 
         "timer": {
           "timeRemaining": {
-            ".validate": "newData.isNumber() && newData.val() >= 0"
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 86400"
           },
           "isRunning": {
             ".validate": "newData.isBoolean()"
           },
           "lastUpdate": {
-            ".validate": "newData.isNumber()"
+            ".validate": "newData.isNumber() && newData.val() > 0"
+          },
+          "$other": {
+            ".validate": false
           }
+        },
+
+        "$other": {
+          ".validate": false
         }
       }
+    },
+
+    "$other": {
+      ".validate": false
     }
   }
 }</textarea>
@@ -204,7 +278,7 @@
                     <h2 class="column-title">Points positifs</h2>
                 </div>
                 <div class="add-card">
-                    <input type="text" id="inputPositive" placeholder="Qu'est-ce qui a bien fonctionné ?" maxlength="200">
+                    <input type="text" id="inputPositive" placeholder="Qu'est-ce qui a bien fonctionné ?" maxlength="300">
                     <button class="btn btn-primary" onclick="addCard('positive')">+</button>
                 </div>
                 <div id="cardsPositive"></div>
@@ -216,7 +290,7 @@
                     <h2 class="column-title">Points à améliorer</h2>
                 </div>
                 <div class="add-card">
-                    <input type="text" id="inputNegative" placeholder="Qu'est-ce qui pourrait être amélioré ?" maxlength="200">
+                    <input type="text" id="inputNegative" placeholder="Qu'est-ce qui pourrait être amélioré ?" maxlength="300">
                     <button class="btn btn-primary" onclick="addCard('negative')">+</button>
                 </div>
                 <div id="cardsNegative"></div>
@@ -228,7 +302,7 @@
                     <h2 class="column-title">Actions</h2>
                 </div>
                 <div class="add-card">
-                    <input type="text" id="inputAction" placeholder="Quelle action mettre en place ?" maxlength="200">
+                    <input type="text" id="inputAction" placeholder="Quelle action mettre en place ?" maxlength="300">
                     <button class="btn btn-primary" onclick="addCard('action')">+</button>
                 </div>
                 <div id="cardsAction"></div>

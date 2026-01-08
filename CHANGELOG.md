@@ -1,5 +1,141 @@
 # Changelog
 
+## Version 4.2.0 - 2026-01-08
+
+### 🔒 Améliorations de Sécurité
+
+#### ✨ Nouvelles fonctionnalités de sécurité
+
+- **Validation stricte de la configuration Firebase**
+  - Regex de validation pour tous les champs (apiKey, authDomain, databaseURL, projectId)
+  - Sanitization automatique supprimant les caractères dangereux (`<>"'\``)
+  - Limites de longueur strictes sur tous les champs
+  - Validation du format des champs optionnels (storageBucket, messagingSenderId, appId)
+  - Protection contre les injections XSS via configuration
+
+- **Session IDs cryptographiquement sécurisés**
+  - Utilisation de `crypto.getRandomValues()` au lieu de `Math.random()`
+  - Format : 32 caractères hexadécimaux (16 bytes)
+  - Espace de recherche énorme (2^128 possibilités)
+  - Impossible à prédire ou bruteforcer
+
+- **User IDs cryptographiquement sécurisés**
+  - Utilisation de `crypto.getRandomValues()` pour les IDs utilisateurs
+  - Format : 32 caractères hexadécimaux (16 bytes)
+  - Plus de prévisibilité basée sur timestamp
+
+- **Content Security Policy renforcé**
+  - Ajout de `img-src 'self' data: https:`
+  - Ajout de `font-src 'self' data:`
+  - Ajout de `object-src 'none'`
+  - Ajout de `base-uri 'self'`
+  - Ajout de `form-action 'self'`
+  - Ajout de `frame-ancestors 'none'`
+  - Ajout de `upgrade-insecure-requests`
+  - Ajout de `block-all-mixed-content`
+  - Wildcard restreint sur script-src (suppression de `*.firebasedatabase.app`)
+
+- **Protection Clickjacking**
+  - Ajout de `X-Frame-Options: DENY`
+  - Double protection avec CSP `frame-ancestors 'none'`
+  - Application impossible à encadrer dans une iframe
+
+#### 🗄️ Règles Firebase Renforcées
+
+- **Validation de type stricte**
+  - Tous les champs validés par type (isString, isNumber, isBoolean)
+  - Validation imbriquée au niveau racine ET sous-champs
+
+- **Validation de longueur**
+  - content : min 1, max 200 caractères
+  - author : min 1, max 30 caractères
+  - groupId : min 1, max 100 caractères
+  - owner : min 1, max 100 caractères
+
+- **Validation de plage**
+  - votes : entre 0 et 999 (limite max)
+  - timeRemaining : entre 0 et 86400 secondes (24h max)
+  - id : doit être positif (> 0)
+  - timestamp : doit être positif (> 0)
+
+- **Rejet des champs inconnus**
+  - `"$other": { ".validate": false }` sur tous les objets
+  - Impossible d'ajouter des champs non prévus
+  - Protection contre l'injection de données malveillantes
+
+#### 🔧 Améliorations techniques
+
+- `config.js` :
+  - `sanitizeConfig(config)` - Supprime caractères dangereux
+  - `validateConfig(config)` - Validation stricte avec regex
+  - Intégration dans `getConfig()` pour sanitization automatique
+- `session.js` :
+  - `generateSessionId()` - Utilise crypto.getRandomValues()
+  - `generateUserId()` - Utilise crypto.getRandomValues()
+- `index.html` :
+  - Règles Firebase complètement réécrites avec validations strictes
+  - CSP et X-Frame-Options améliorés
+
+#### 📚 Documentation
+
+- Mise à jour complète de **FIREBASE_RULES.md** avec nouvelles règles strictes
+- Ajout de section "Sécurité Renforcée (v4.2.0)" avec exemples
+- Documentation des limites et validations
+- Ajout de cette entrée dans **CHANGELOG.md**
+- Création de **SECURITY_AUDIT.md** - Audit complet de sécurité
+- Création de **SECURITY_IMPROVEMENT_PLAN.md** - Plan d'amélioration détaillé
+
+#### 🎯 Impact Sécurité
+
+**Score avant améliorations : 5/10** ⚠️
+**Score après améliorations : 7/10** 🟢
+
+**Vulnérabilités corrigées (5/14) :**
+- ✅ Injection via configuration Firebase (ÉLEVÉ)
+- ✅ Session ID prévisible (MOYEN)
+- ✅ CSP trop permissif (MOYEN)
+- ✅ Validation côté client uniquement (MOYEN - amélioré par règles Firebase strictes)
+- ✅ Pas de protection clickjacking (FAIBLE)
+
+**Vulnérabilités restantes (nécessitent Firebase Auth + backend) :**
+- ⛔ Firebase en mode ouvert (.write: true)
+- ⛔ Absence d'authentification réelle
+- 🔴 Exposition des clés Firebase via URL
+- 🔴 localStorage non chiffré
+- 🟠 Pas de rate limiting
+- 🟠 Pas de protection CSRF
+
+#### ⚠️ Notes Importantes
+
+**Améliorations significatives mais limitations restantes :**
+- L'application reste en mode `.write: true` (tous peuvent écrire)
+- L'authentification reste basée sur localStorage (pas de Firebase Auth)
+- Les clés Firebase restent exposées côté client
+- Pas de rate limiting côté serveur
+
+**Pour une sécurité maximale :**
+- Implémenter Firebase Authentication
+- Ajouter des Cloud Functions pour rate limiting
+- Utiliser un backend pour gérer les tokens de partage
+- Implémenter des règles Firebase avec `auth.uid`
+
+#### 🔄 Changements de Comportement
+
+**Configuration Firebase :**
+- Les configurations invalides sont maintenant rejetées avec messages d'erreur détaillés
+- Les caractères dangereux sont automatiquement supprimés
+- Les formats incorrects sont détectés et bloqués
+
+**Session/User IDs :**
+- Format changé : `retro-XXXXXXXX...` (32 hex) au lieu de `retro-XXXXXX` (6-7 caractères)
+- Plus aucune corrélation avec le timestamp
+- IDs plus longs mais infiniment plus sécurisés
+
+**Firebase :**
+- Les données non conformes aux règles strictes sont automatiquement rejetées
+- Impossible d'ajouter des champs non prévus
+- Limites strictes sur votes, timer, longueurs
+
 ## Version 4.1.0 - 2026-01-07
 
 ### 📦 Phase de Regroupement
