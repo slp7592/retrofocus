@@ -89,9 +89,6 @@ export async function createNewSession(userName) {
         users: {
             [currentUserId]: currentUserName
         },
-        positive: {},
-        negative: {},
-        action: {},
         timer: {
             timeRemaining: 0,
             isRunning: false,
