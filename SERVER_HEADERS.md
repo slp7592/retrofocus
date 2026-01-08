@@ -58,7 +58,7 @@ Créez un fichier `.htaccess` à la racine du projet :
     Header always set X-Frame-Options "DENY"
 
     # Content Security Policy complète
-    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://firebasestorage.googleapis.com; style-src 'self' 'unsafe-inline'; connect-src https://*.firebaseio.com https://*.firebasedatabase.app https://*.googleapis.com https://www.gstatic.com wss://*.firebaseio.com wss://*.firebasedatabase.app; img-src 'self' data: https:; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; frame-src https://*.firebasedatabase.app; upgrade-insecure-requests; block-all-mixed-content;"
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://firebasestorage.googleapis.com; style-src 'self' 'unsafe-inline'; connect-src https://*.firebaseio.com https://*.firebasedatabase.app https://*.googleapis.com https://www.gstatic.com wss://*.firebaseio.com wss://*.firebasedatabase.app; img-src 'self' data: https:; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; frame-src https://*.firebasedatabase.app; upgrade-insecure-requests;"
 
     # Autres en-têtes de sécurité
     Header always set X-Content-Type-Options "nosniff"
@@ -79,7 +79,7 @@ server {
     add_header X-Frame-Options "DENY" always;
 
     # Content Security Policy complète
-    add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://firebasestorage.googleapis.com; style-src 'self' 'unsafe-inline'; connect-src https://*.firebaseio.com https://*.firebasedatabase.app https://*.googleapis.com https://www.gstatic.com wss://*.firebaseio.com wss://*.firebasedatabase.app; img-src 'self' data: https:; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; frame-src https://*.firebasedatabase.app; upgrade-insecure-requests; block-all-mixed-content;" always;
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://firebasestorage.googleapis.com; style-src 'self' 'unsafe-inline'; connect-src https://*.firebaseio.com https://*.firebasedatabase.app https://*.googleapis.com https://www.gstatic.com wss://*.firebaseio.com wss://*.firebasedatabase.app; img-src 'self' data: https:; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; frame-src https://*.firebasedatabase.app; upgrade-insecure-requests;" always;
 
     # Autres en-têtes de sécurité
     add_header X-Content-Type-Options "nosniff" always;
@@ -98,7 +98,7 @@ Créez un fichier `_headers` à la racine du projet :
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: geolocation=(), microphone=(), camera=()
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://firebasestorage.googleapis.com; style-src 'self' 'unsafe-inline'; connect-src https://*.firebaseio.com https://*.firebasedatabase.app https://*.googleapis.com https://www.gstatic.com wss://*.firebaseio.com wss://*.firebasedatabase.app; img-src 'self' data: https:; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; frame-src https://*.firebasedatabase.app; upgrade-insecure-requests; block-all-mixed-content;
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://firebasestorage.googleapis.com; style-src 'self' 'unsafe-inline'; connect-src https://*.firebaseio.com https://*.firebasedatabase.app https://*.googleapis.com https://www.gstatic.com wss://*.firebaseio.com wss://*.firebasedatabase.app; img-src 'self' data: https:; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; frame-src https://*.firebasedatabase.app; upgrade-insecure-requests;
 ```
 
 ### Vercel
@@ -117,7 +117,7 @@ Créez un fichier `vercel.json` à la racine du projet :
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://firebasestorage.googleapis.com; style-src 'self' 'unsafe-inline'; connect-src https://*.firebaseio.com https://*.firebasedatabase.app https://*.googleapis.com https://www.gstatic.com wss://*.firebaseio.com wss://*.firebasedatabase.app; img-src 'self' data: https:; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; frame-src https://*.firebasedatabase.app; upgrade-insecure-requests; block-all-mixed-content;"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://firebasestorage.googleapis.com; style-src 'self' 'unsafe-inline'; connect-src https://*.firebaseio.com https://*.firebasedatabase.app https://*.googleapis.com https://www.gstatic.com wss://*.firebaseio.com wss://*.firebasedatabase.app; img-src 'self' data: https:; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; frame-src https://*.firebasedatabase.app; upgrade-insecure-requests;"
         },
         {
           "key": "X-Content-Type-Options",
@@ -163,7 +163,7 @@ Créez un fichier `firebase.json` à la racine du projet :
           },
           {
             "key": "Content-Security-Policy",
-            "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://firebasestorage.googleapis.com; style-src 'self' 'unsafe-inline'; connect-src https://*.firebaseio.com https://*.firebasedatabase.app https://*.googleapis.com https://www.gstatic.com wss://*.firebaseio.com wss://*.firebasedatabase.app; img-src 'self' data: https:; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; frame-src https://*.firebasedatabase.app; upgrade-insecure-requests; block-all-mixed-content;"
+            "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://firebasestorage.googleapis.com; style-src 'self' 'unsafe-inline'; connect-src https://*.firebaseio.com https://*.firebasedatabase.app https://*.googleapis.com https://www.gstatic.com wss://*.firebaseio.com wss://*.firebasedatabase.app; img-src 'self' data: https:; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; frame-src https://*.firebasedatabase.app; upgrade-insecure-requests;"
           },
           {
             "key": "X-Content-Type-Options",
