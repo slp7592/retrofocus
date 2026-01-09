@@ -123,7 +123,7 @@
   - Validation imbriquée au niveau racine ET sous-champs
 
 - **Validation de longueur**
-  - content : min 1, max 200 caractères
+  - content : min 1, max 300 caractères
   - author : min 1, max 30 caractères
   - groupId : min 1, max 100 caractères
   - owner : min 1, max 100 caractères

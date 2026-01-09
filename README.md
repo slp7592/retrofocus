@@ -154,7 +154,7 @@ L'application guide l'équipe à travers 4 phases distinctes :
 ### Ajouter des cartes
 
 **Points positifs et négatifs** (Phase Réflexion uniquement) :
-1. Tapez votre commentaire (max 200 caractères)
+1. Tapez votre commentaire (max 300 caractères)
 2. Appuyez sur Entrée ou cliquez sur "+"
 3. En phase Réflexion : **vos cartes restent privées**
 4. En phase Regroupement et Vote : toutes les cartes sont révélées
